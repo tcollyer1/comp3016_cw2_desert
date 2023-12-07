@@ -30,6 +30,18 @@
     <ClCompile Include="src\cpp\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\cpp\Display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpp\Buffers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpp\Terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shaders\LoadShaders.h">
@@ -39,6 +51,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\h\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\h\Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\h\Buffers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\h\Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
