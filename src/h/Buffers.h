@@ -2,6 +2,8 @@
 
 #define BUFFERS_H
 
+#include <glad/glad.h>
+
 //GLM
 #include "glm/ext/vector_float3.hpp"
 #include <glm/ext/matrix_transform.hpp>

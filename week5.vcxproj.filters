@@ -39,7 +39,7 @@
     <ClCompile Include="src\cpp\Terrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Light.cpp">
+    <ClCompile Include="src\cpp\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,7 +62,7 @@
     <ClInclude Include="src\h\Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="h\Light.h">
+    <ClInclude Include="src\h\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

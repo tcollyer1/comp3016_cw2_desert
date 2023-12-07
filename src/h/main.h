@@ -5,4 +5,4 @@
 void ProcessUserInput(GLFWwindow* pW);
 void frameBufferSizeCallback(GLFWwindow* pW, int width, int height);
 void mouseCallback(GLFWwindow* pW, double x, double y);
-void moveLight(double currTime);
+//void moveLight(double currTime);
