@@ -1,5 +1,3 @@
-// See labs 5-6
-
 #include <iostream>
 
 //GLM
@@ -28,9 +26,6 @@
 
 using namespace std;
 using namespace glm;
-
-GLuint program;
-GLuint lightProg;
 
 /*******************************************************************************************
 *
@@ -89,16 +84,6 @@ float lastFrame = 0.0f;
 vec3 lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
 
 const vec3 terrainStart = vec3(0.0f, -2.0f, -1.5f);
-
-/*
-	Main Steps of OpenGL Object Rendering
-	-------------------------------------
-*/
-/* The main steps are as follows:
-*		1. Instantiating spatial information (window, size/height) in C++ --> CPU
-*		2. Transitioning data to the shader using OpenGL --> CPU->GPU
-*		3. Rendering with GLSL (OpenGL shading language) --> GPU
-*/
 
 int main()
 {
