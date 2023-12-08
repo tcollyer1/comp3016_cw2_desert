@@ -10,7 +10,7 @@ using namespace std;
 class TerrainTexture
 {
 public:
-	enum TerrainType { SAND, GRASS, WATER };
+	enum TerrainType { SAND, GRASS, WATER, SAND_2 };
 
 	TerrainTexture(string path, TerrainType type, Shader* terrainShader);
 	~TerrainTexture();

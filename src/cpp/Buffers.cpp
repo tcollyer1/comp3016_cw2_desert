@@ -30,8 +30,10 @@ int VAO::getCoordSize(BufferType type)
 
 	switch (type)
 	{
-	case VERTICES:
 	case COLOURS:
+		sz = 4;
+		break;
+	case VERTICES:
 	case NORMALS:
 		sz = 3;
 		break;

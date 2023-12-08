@@ -5,6 +5,8 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <vector>
+
 #define RENDER_DIST			512							// Map width/height
 #define MAP_SIZE			(RENDER_DIST * RENDER_DIST) // Total map size
 
@@ -25,6 +27,8 @@
 #define CHUNK_TRIANGLES		2 // Two triangles per square chunk
 #define TOTAL_TRIANGLES		(ROW_CHUNKS * ROW_CHUNKS * CHUNK_TRIANGLES) // Total amount of triangles on the map
 
+using namespace std;
+
 class Terrain
 {
 private:
@@ -32,6 +36,10 @@ private:
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures
 	VAO::VertexData terrainVertices[MAP_SIZE];
 	int				normalsCalc[MAP_SIZE];
+
+	bool			trees[MAP_SIZE];
+
+	vector<vec3>	treePositions;
 
 	ivec3 terrainIndices[TOTAL_TRIANGLES];
 
@@ -55,4 +63,5 @@ public:
 
 	VAO::VertexData* getVertices();
 	ivec3* getIndices();
+	void getTreePositions(vector<vec3>* positions);
 };

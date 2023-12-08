@@ -21,6 +21,11 @@ Terrain::Terrain()
 	colIndicesOffset	= 0;
 	rowIndicesOffset	= 0;
 
+	for (int i = 0; i < MAP_SIZE; i++)
+	{
+		trees[i] = false;
+	}
+
 	generateVertices();
 	generateLandscape();
 	setTextureCoords();
@@ -30,6 +35,14 @@ Terrain::Terrain()
 VAO::VertexData* Terrain::getVertices()
 {
 	return (terrainVertices);
+}
+
+void Terrain::getTreePositions(vector<vec3>* positions)
+{
+	for (int i = 0; i < treePositions.size(); i++)
+	{
+		positions->push_back(treePositions[i]);
+	}
 }
 
 ivec3* Terrain::getIndices()
@@ -122,13 +135,11 @@ void Terrain::generateVertices()
 // the textures for the shader.
 void Terrain::generateLandscape()
 {
-	// Assign perlin noise type for the map. This affects the y axis, which we previously
-	// assigned a value of 0 for flat terrain
+	// Assign perlin noise type for the map. This affects the y axis
 	FastNoiseLite terrainNoise;
 	terrainNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
 
 	// Set noise scale
-	//terrainNoise.SetFrequency(0.05f);
 	terrainNoise.SetFrequency(0.025f);
 
 	// Generate random seed
@@ -136,24 +147,26 @@ void Terrain::generateLandscape()
 
 	terrainNoise.SetSeed(seed);
 
-	// Create another biome with another FastNoiseLite var
-	FastNoiseLite biomeNoise;
+	// Perlin noise for pathway map
+	FastNoiseLite pathNoise;
+	pathNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+	pathNoise.SetFrequency(0.05f);
+	int pSeed = rand() % 100;
+	pathNoise.SetSeed(pSeed);
 
-	// This time, set the noise type to cellular
-	biomeNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
-
-	biomeNoise.SetFrequency(0.05f);
-
-	// Generate biome random seed
-	int bSeed = rand() % 100;
-
-	terrainNoise.SetSeed(seed);
-	biomeNoise.SetSeed(bSeed);
+	// Perlin noise for tree placement
+	FastNoiseLite trees;
+	trees.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+	trees.SetFrequency(10.0f);
+	int tSeed = rand() % 100;
+	trees.SetSeed(tSeed);
 
 	// Terrain vertice index
 	int terrainIndex = 0;
-	float biomeVal = 0.0f;
+
 	float terrainVal = 0.0f;
+	float pathVal = 0.0f;
+	float treesVal = 0.0f;
 
 	for (int x = 0; x < RENDER_DIST; x++)
 	{
@@ -161,29 +174,48 @@ void Terrain::generateLandscape()
 		{
 			// Get noise values for biome type and terrain height (between -1 and 1)
 			// at the given x/y coordinate (2D position)
-			biomeVal = biomeNoise.GetNoise((float)x, (float)y);
-			//terrainVal = terrainNoise.GetNoise((float)x, (float)y);
 
 			// Generate noise at 3 different frequencies for additional variation
 			terrainVal = 1 * terrainNoise.GetNoise((float)x, (float)y)
 				+ 0.5 * terrainNoise.GetNoise(2 * (float)x, 2 * (float)y)
 				+ 0.25 * terrainNoise.GetNoise(4 * (float)x, 4 * (float)y);
 
+			// Generate noise and get absolute value (turbulence).
+			// This produces a simple noise map that gives the impression of
+			// winding pathways
+			pathVal = abs(pathNoise.GetNoise((float)x, (float)y));
+
+			treesVal = trees.GetNoise((float)x, (float)y);
+
+			// Set random height value (random noise) calculated before,
+			// to the vertex y value. 
+			// Divide by the sum of the 3 amplitudes to maintain values between 0-1 (?)
+			// Multiply by 2 for greater height diversity.
+			terrainVertices[terrainIndex].vertices.y = (terrainVal / (1 + 0.5 + 0.25)) * 2;
+
 			// If the terrain height exceeds 0.35, green for grassy
-			// biome
-			if (terrainVal >= 0.35f)
+			// biome (where shrubs/cacti will appear)
+			if (terrainVal >= 0.55f)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.0f;
 				terrainVertices[terrainIndex].colours.g = 1.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
+				terrainVertices[terrainIndex].colours.a = 0.0f;
+
+				// Set a tree here
+				if (treesVal > 0.99f)
+				{
+					treePositions.push_back(vec3(terrainVertices[terrainIndex].vertices));
+				}
 			}
 			// If the terrain is just below grass biome level - allow the textures
 			// to mix between grass/sand
-			else if (terrainVal < 0.35 && terrainVal >= 0.3)
+			else if (terrainVal < 0.55 && terrainVal >= 0.5)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.5f;
 				terrainVertices[terrainIndex].colours.g = 1.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
+				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
 			// If terrain height is below -0.35, set to oasis
 			// (water) biome
@@ -192,42 +224,34 @@ void Terrain::generateLandscape()
 				terrainVertices[terrainIndex].colours.r = 0.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 1.0f;
+				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
 			// If the terrain is just above water biome level - allow the textures
 			// to mix between water/sand
+			// Trees will also appear here to flesh out this biome
 			else if (terrainVal > -0.35 && terrainVal <= -0.3)
 			{
 				terrainVertices[terrainIndex].colours.r = 1.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 0.5f;
+				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
-
-			// Otherwise, if the biome value generated is -0.9 or below, 
-			// let's say this is a "plains" biome (green)
-			//else if (biomeVal <= -0.8f)
-			//{
-			//	// Set colour for plains
-			//	/*terrainVertices[terrainIndex][3] = 0.0f;
-			//	terrainVertices[terrainIndex][4] = 0.75f;
-			//	terrainVertices[terrainIndex][5] = 0.25f;*/
-
-			//	terrainVertices[terrainIndex][3] = 0.0f;
-			//	terrainVertices[terrainIndex][4] = 1.0f;
-			//	terrainVertices[terrainIndex][5] = 0.0f;
-			//}
-			// Main desert (sand) biome
+			// Generate pathways - alternate sand colour
+			else if (pathVal < 0.2f)
+			{
+				terrainVertices[terrainIndex].colours.r = 0.0f;
+				terrainVertices[terrainIndex].colours.g = 0.0f;
+				terrainVertices[terrainIndex].colours.b = 0.0f;
+				terrainVertices[terrainIndex].colours.a = 1.0f;
+			}
+			// Main desert (sand) biome. Only small rocks/grass here
 			else
 			{
 				terrainVertices[terrainIndex].colours.r = 1.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
+				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
-
-			// Set random height value (random noise) calculated before,
-			// to the vertex y value. 
-			// Divide by the sum of the 3 amplitudes to maintain values between 0-1 (?)
-			// Multiply by 2 for greater height diversity.
-			terrainVertices[terrainIndex].vertices.y = (terrainVal / (1 + 0.5 + 0.25)) * 2;
 
 			terrainIndex++;
 		}
@@ -302,36 +326,24 @@ void Terrain::generateNormals()
 			terrainVertices[i].normals.x += normal.x;
 			terrainVertices[i].normals.y += normal.y;
 			terrainVertices[i].normals.z += normal.z;
-			// Texture coordinates
-			/*terrainVertices[i][9] = 0.0f;
-			terrainVertices[i][10] = 1.0f;*/
 			normalsCalc[i]++;
 
 			// Top right of quad
 			terrainVertices[i + 1].normals.x += normal.x;
 			terrainVertices[i + 1].normals.y += normal.y;
 			terrainVertices[i + 1].normals.z += normal.z;
-			// Texture coordinates
-			/*terrainVertices[i+1][9] = 1.0f;
-			terrainVertices[i+1][10] = 1.0f;*/
 			normalsCalc[i + 1]++;
 
 			// Bottom left of quad
 			terrainVertices[i - RENDER_DIST].normals.x += normal.x;
 			terrainVertices[i - RENDER_DIST].normals.y += normal.y;
 			terrainVertices[i - RENDER_DIST].normals.z += normal.z;
-			// Texture coordinates
-			/*terrainVertices[i - RENDER_DIST][9] = 0.0f;
-			terrainVertices[i - RENDER_DIST][10] = 0.0f;*/
 			normalsCalc[i - RENDER_DIST]++;
 
 			// Bottom right of quad
 			terrainVertices[(i - RENDER_DIST) + 1].normals.x += normal.x;
 			terrainVertices[(i - RENDER_DIST) + 1].normals.y += normal.y;
 			terrainVertices[(i - RENDER_DIST) + 1].normals.z += normal.z;
-			// Texture coordinates
-			/*terrainVertices[(i - RENDER_DIST) + 1][9] = 1.0f;
-			terrainVertices[(i - RENDER_DIST) + 1][10] = 0.0f;*/
 			normalsCalc[(i - RENDER_DIST) + 1]++;
 		}
 	}

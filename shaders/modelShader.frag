@@ -6,7 +6,7 @@ in vec2 TexturesFrag;
 in vec3 Normal;
 in vec3 FragPos;
 
-uniform sampler2D texture_specular1;
+uniform sampler2D texture_diffuse1;
 
 uniform vec3 lightPos;
 uniform vec3 objColour;
@@ -43,6 +43,6 @@ vec3 norm = normalize(Normal);
 
 	// Apply colour
 	//FragColor = vec4(colourFrag, 1.0f) * vec4(resultColour, 1.0f);
-	FragColor = texture(texture_specular1, TexturesFrag) * vec4(resultColour, 1.0f);
+	FragColor = texture(texture_diffuse1, TexturesFrag) * vec4(resultColour, 1.0f);
 	//FragColor = totalColour * vec4(resultColour, 1.0f);
 }

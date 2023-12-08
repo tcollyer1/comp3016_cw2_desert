@@ -51,7 +51,7 @@ public:
 	struct VertexData
 	{
 		vec3 vertices;
-		vec3 colours;
+		vec4 colours;
 		vec3 normals;
 		vec2 textures;
 	};

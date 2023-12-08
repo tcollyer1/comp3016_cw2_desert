@@ -16,6 +16,7 @@
 
 // Other
 #include <math.h>
+#include <vector>
 
 #include "..\h\main.h"
 #include "..\h\Display.h"
@@ -65,6 +66,9 @@ bool mouseFirstEntry = true;
 float cameraLastXPos = 0.0f;
 float cameraLastYPos = 0.0f;
 
+vec3 rockPos = vec3(0.0f);
+int treeOrShrub[MAP_SIZE];
+
 /*******************************************************************************************
 *
 * TIME GLOBALS
@@ -102,6 +106,8 @@ int main()
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
 	Model rock("media/rock/Rock07-Base.obj");
+	Model shrub("media/shrub/free grass by adam127.obj"); // TODO: Model needs replacing, low quality
+	Model palmTree("media/palmTree/CordylineFREE.obj");
 
 	/*******************************************************************************************
 	*
@@ -151,6 +157,13 @@ int main()
 	TerrainTexture* water = new TerrainTexture("media/water.jpg", TerrainTexture::WATER, &terrainShaders);
 	water->bindTexture();
 
+	//-------------------------
+	// TEXTURE 4: SAND 2 (path)
+	//-------------------------
+
+	TerrainTexture* sand2 = new TerrainTexture("media/sandPath.jpg", TerrainTexture::SAND_2, &terrainShaders);
+	sand2->bindTexture();
+
 	/*******************************************************************************************
 	*
 	* CREATING LIGHT SOURCE
@@ -167,6 +180,17 @@ int main()
 	testLightVAO->enableAttribArrays();
 
 	testLightVAO->unbind();
+
+
+	// TODO: Generate list of all positions where trees must be drawn
+	vector<vec3> treePositions;
+	terrain->getTreePositions(&treePositions);
+
+	// Randomise whether tree or shrub is placed in grassy areas
+	for (int i = 0; i < treePositions.size(); i++)
+	{
+		treeOrShrub[i] = rand() % 2;
+	}
 
 
 	/*******************************************************************************************
@@ -247,6 +271,7 @@ int main()
 		sand->bindTexture();
 		grass->bindTexture();
 		water->bindTexture();
+		sand2->bindTexture();
 		terrainVAO->bind();
 
 		glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
@@ -261,32 +286,42 @@ int main()
 		modelShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
 		modelShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
 
-		model = mat4(1.0f);
+		for (int i = 0; i < treePositions.size(); i++)
+		{
+			model = mat4(1.0f);
 
-		vec3 rockPos = terrainStart;
+			rockPos.x = terrainStart.x + treePositions[i].x;
+			rockPos.y = terrainStart.y + treePositions[i].y;
+			rockPos.z = terrainStart.z + treePositions[i].z;
 
-		// For now, offset by randomly chosen vertice on the terrain to place it somewhere
-		/*rockPos.x += terrainVertices[167522][0];
-		rockPos.y += terrainVertices[167522][1] + 0.05f;
-		rockPos.z += terrainVertices[167522][2];*/
-		rockPos.x += terrain->getVertices()[TOP_RIGHT].vertices.x;
-		rockPos.y += terrain->getVertices()[TOP_RIGHT].vertices.y;
-		rockPos.z += terrain->getVertices()[TOP_RIGHT].vertices.z;
+			model = translate(model, rockPos);
 
-		model = translate(model, rockPos);
+			// Set our MVP matrix to the uniform variables
+			modelShaders.setMat4("view", view);
+			modelShaders.setMat4("projection", projection);
+			modelShaders.setVec3("viewPos", cameraPos);
 
-		// Scale down rock object
-		model = scale(model, vec3(0.025f, 0.025f, 0.025f));
+			// Draw model using enabled shaders
+			if (treeOrShrub[i])
+			{
+				// Scale down tree object, draw tree
+				model = scale(model, vec3(0.005f, 0.005f, 0.005f));
 
+				modelShaders.setMat4("model", model);
 
-		// Set our MVP matrix, mvp, to the uniform variable
-		modelShaders.setMat4("model", model);
-		modelShaders.setMat4("view", view);
-		modelShaders.setMat4("projection", projection);
-		modelShaders.setVec3("viewPos", cameraPos);
+				palmTree.Draw(modelShaders);
+			}
+			else
+			{
+				// Scale down grass object, draw grass
+				model = scale(model, vec3(0.2f, 0.2f, 0.2f));
 
-		// Draw model using enabled shaders
-		rock.Draw(modelShaders);
+				modelShaders.setMat4("model", model);
+
+				shrub.Draw(modelShaders);
+			}
+			
+		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw the Light Cube *** //
@@ -294,7 +329,6 @@ int main()
 		// Switch to light cube shaders, bind other VAO
 		//glUseProgram(lightProg);
 		lightShaders.use();
-		//glBindVertexArray(lightVAO);
 		testLightVAO->bind();
 
 		model = mat4(1.0f);
@@ -302,10 +336,7 @@ int main()
 		// Move model
 		model = translate(model, lightPos);
 
-		// Set our MVP matrix, mvp, to the uniform variable
-		/*glUniformMatrix4fv(modelLightIdx, 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(viewLightIdx, 1, GL_FALSE, value_ptr(view));
-		glUniformMatrix4fv(projLightIdx, 1, GL_FALSE, value_ptr(projection));*/
+		// Set our MVP matrix to the uniform variables
 		lightShaders.setMat4("model", model);
 		lightShaders.setMat4("view", view);
 		lightShaders.setMat4("projection", projection);
