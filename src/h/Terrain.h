@@ -10,7 +10,7 @@
 
 #define VERTICE_OFFSET		0.1f						// Distance between each vertice drawn on the terrain
 
-// For light...?
+// Global terrain positions
 #define START_POS			VERTICE_OFFSET
 #define END_POS				(RENDER_DIST * VERTICE_OFFSET)
 #define MIDDLE_POS			(END_POS * 0.5)				// Middle coordinate of the map (x & z axes)

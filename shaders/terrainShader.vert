@@ -1,9 +1,5 @@
-// Language in use is GLSL - similar to C++
-// Vertex shader determines all the positions of the vertices of an object
+#version 460
 
-#version 460 // Establish GLSL version
- 
-// Position with values retrieved from main.cpp
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoords;
@@ -11,7 +7,7 @@ layout (location = 3) in vec3 colour;
 
 out vec3 colourFrag;
 
-// Normal out, fragment position out
+// Send out normals, fragment position and textures to fragment shader
 out vec3 Normal;
 out vec3 FragPos;
 out vec2 TexturesFrag;

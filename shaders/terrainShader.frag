@@ -1,8 +1,3 @@
-// Fragment shader is responsible for mapping colours to the right pixels after
-// rasterisation (???)
-
-// Each instance of a running fragment shader is responsible for one pixel & its colour
-
 #version 460
 
 out vec4 FragColor; // Outputted to next stage of graphics pipeline
@@ -19,9 +14,9 @@ uniform vec3 viewPos;
 in vec3 colourFrag;
 in vec2 TexturesFrag;
 
-uniform sampler2D textureInSand;
-uniform sampler2D textureInGrass;
-uniform sampler2D textureInWater;
+uniform sampler2D texture0;
+uniform sampler2D texture1;
+uniform sampler2D texture2;
 
 // Split texture into 30 tiles so it isn't one large blurred texture
 vec2 tiledTex = TexturesFrag * 30;
@@ -30,9 +25,9 @@ vec2 tiledTex = TexturesFrag * 30;
 vec4 textureMap = vec4(colourFrag, 1.0f);
 
 // Distribute textures according to the texture map
-vec4 sandTexColour = texture(textureInSand, tiledTex) * textureMap.r;
-vec4 grassTexColour = texture(textureInGrass, tiledTex) * textureMap.g;
-vec4 waterTexColour = texture(textureInWater, tiledTex) * textureMap.b;
+vec4 sandTexColour = texture(texture0, tiledTex) * textureMap.r;
+vec4 grassTexColour = texture(texture1, tiledTex) * textureMap.g;
+vec4 waterTexColour = texture(texture2, tiledTex) * textureMap.b;
 
 // Get the total colour for this fragment
 vec4 totalColour = sandTexColour + grassTexColour + waterTexColour;
@@ -55,18 +50,13 @@ vec3 norm = normalize(Normal);
 	vec3 viewDir = normalize(viewPos - FragPos);
 
 	vec3 halfwayDir = normalize(lightDir + viewDir);
-	//vec3 reflectionDir = reflect(-lightDir, norm); // reflect() expects from light source -> model pos, but we have it the other way so reverse it
 
-	//float specCalc = pow(max(dot(viewDir, reflectionDir), 0.0f), 32); // 32 -> shininess value
 	float specCalc = pow(max(dot(norm, halfwayDir), 0.0f), 32); // 32 -> shininess value
-	//vec3 specular = specularStrength * specCalc * lightColour;
 	vec3 specular = specularStrength * specCalc * lightColour;
 
 
 	vec3 resultColour = (ambient + diffuse + specular) * objColour;
 
 	// Apply colour
-	//FragColor = vec4(colourFrag, 1.0f) * vec4(resultColour, 1.0f);
-	//FragColor = texture(textureInSand, tiledTex) * vec4(resultColour, 1.0f);
 	FragColor = totalColour * vec4(resultColour, 1.0f);
 }

@@ -1,7 +1,7 @@
 #include "..\h\Display.h"
 
-#define WINDOW_WIDTH		1280
-#define WINDOW_HEIGHT		720
+#define WINDOW_WIDTH		glfwGetVideoMode(glfwGetPrimaryMonitor())->width - 100//1280
+#define WINDOW_HEIGHT		glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 100//720
 
 Display::Display(GLFWcursorposfun mouseCallback, GLFWframebuffersizefun frameBuffSizeCallback)
 {
@@ -12,9 +12,6 @@ Display::Display(GLFWcursorposfun mouseCallback, GLFWframebuffersizefun frameBuf
 
 	// Create a GLFWwindow window
 	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Desert", NULL, NULL);
-	/*window = glfwCreateWindow(glfwGetVideoMode(glfwGetPrimaryMonitor())->width,
-		glfwGetVideoMode(glfwGetPrimaryMonitor())->height, "Desert",
-		glfwGetPrimaryMonitor(), NULL);*/
 
 	// Checks for successful window creation
 	if (window == NULL)

@@ -7,21 +7,14 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// Textures - header must be in C:/Users/Public/OpenGL/include
-#include "stb_image.h"
-
 // Shaders
 #include <learnopengl/shader_m.h>
 #include <learnopengl/model.h>
-//#include "shaders/LoadShaders.h"
 
 // Assimp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-// Perlin Noise
-#include "..\h\FastNoiseLite.h"
 
 // Other
 #include <math.h>
@@ -31,6 +24,7 @@
 #include "..\h\Buffers.h"
 #include "..\h\Terrain.h"
 #include "..\h\Light.h"
+#include "..\h\Texture.h"
 
 using namespace std;
 using namespace glm;
@@ -88,24 +82,10 @@ float lastFrame = 0.0f;
 
 /*******************************************************************************************
 *
-* VAOS & BUFFERS FOR VERTEX DATA
-*
-*******************************************************************************************/
-// VAO vertex attribute types
-enum VAO_ID { TRIANGLE, INDICES, COLOUR, TEXTURE1, TEXTURE2, TEXTURE3, NORMALS, NUM_VAO = 2 };
-GLuint VAOs[NUM_VAO];
-
-// Buffer types
-enum BUFFER_ID { ARRAY_BUFFER, NUM_BUFFER = 10 };
-GLuint buffers[NUM_BUFFER];
-
-/*******************************************************************************************
-*
 * LIGHTING
 *
 *******************************************************************************************/
 // Set default light position
-//vec3 lightPos(1.2f, 5.0f, 2.0f);
 vec3 lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
 
 const vec3 terrainStart = vec3(0.0f, -2.0f, -1.5f);
@@ -132,38 +112,15 @@ int main()
 	}
 
 	// Set shaders & model
-	Shader terrainShaders("shaders/vertexShader.vert", "shaders/fragmentShader.frag");
+	Shader terrainShaders("shaders/terrainShader.vert", "shaders/terrainShader.frag");
 	Shader lightShaders("shaders/lightShader.vert", "shaders/lightShader.frag");
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
 	Model rock("media/rock/Rock07-Base.obj");
 
-	/*ShaderInfo shaders[] =
-	{
-		{ GL_VERTEX_SHADER, "shaders/vertexShader.vert" },
-		{ GL_FRAGMENT_SHADER, "shaders/fragmentShader.frag"},
-		{ GL_NONE, NULL }
-	};
-
-	ShaderInfo lightShaders[] =
-	{
-		{ GL_VERTEX_SHADER, "shaders/lightShader.vert" },
-		{ GL_FRAGMENT_SHADER, "shaders/lightShader.frag"},
-		{ GL_NONE, NULL }
-	};
-
-	program = LoadShaders(shaders);
-	lightProg = LoadShaders(lightShaders);*/
-
-	/*******************************************************************************************
-	* 
-	* --- MAIN CODE ---
-	* 
-	*******************************************************************************************/
-
 	/*******************************************************************************************
 	*
-	* CREATING THE TERRAIN VAO FOR VERTICES AND COLOURS
+	* CREATING THE TERRAIN
 	*
 	*******************************************************************************************/
 
@@ -185,130 +142,29 @@ int main()
 
 	/*******************************************************************************************
 	*
-	* TEXTURES
+	* TERRAIN TEXTURES
 	*
 	*******************************************************************************************/
-
-	// Assign textures to generate and bind to 2D texture
-	glGenTextures(NUM_BUFFER, buffers);
 
 	//-------------------------
 	// TEXTURE 1: SAND
 	//-------------------------
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE1]);
-
-	// Selects x axis of texture bound to GL_TEXTURE_2D & sets to repeat beyond 
-	// normalised coordinates (WRAP_S)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	// Selects y axis and does the same (WRAP_T)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	// Texture scaling/filtering. Params: buffer type | downscaling (GL_TEXTURE_MIN_FILTER) or upscaling (GL_TEXTURE_MAG_FILTER) | filtering type
-	// Sets to use linear interpolation between adjacent mipmaps
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	// Sets to use linear interpolation upscaling (past largest mipmap texture) (default upscaling method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Load texture and set width, height and colour channel params
-	int width, height, colourChannels;
-	unsigned char* data = stbi_load("media/sand.jpg", &width, &height, &colourChannels, 0);
-
-	if (data) // If retrieval was successful
-	{
-		// Generation of texture from retrieved texture data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		// Automatically generates all required mipmaps on bound texture
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else // If retrieval unsuccessful
-	{
-		cout << "Failed to load texture.\n";
-		return -1;
-	}
-
-	// Clears retrieved texture from memory
-	stbi_image_free(data);
+	TerrainTexture* sand = new TerrainTexture("media/sand.jpg", TerrainTexture::SAND, &terrainShaders);
+	sand->bindTexture();
 
 	//-------------------------
 	// TEXTURE 2: GRASS
 	//-------------------------
 
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE2]);
-
-	// Selects x axis of texture bound to GL_TEXTURE_2D & sets to repeat beyond 
-	// normalised coordinates (WRAP_S)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	// Selects y axis and does the same (WRAP_T)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	// Texture scaling/filtering. Params: buffer type | downscaling (GL_TEXTURE_MIN_FILTER) or upscaling (GL_TEXTURE_MAG_FILTER) | filtering type
-	// Sets to use linear interpolation between adjacent mipmaps
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	// Sets to use linear interpolation upscaling (past largest mipmap texture) (default upscaling method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Load texture and set width, height and colour channel params
-	data = stbi_load("media/grass.jpg", &width, &height, &colourChannels, 0);
-
-	if (data) // If retrieval was successful
-	{
-		// Generation of texture from retrieved texture data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		// Automatically generates all required mipmaps on bound texture
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else // If retrieval unsuccessful
-	{
-		cout << "Failed to load texture.\n";
-		return -1;
-	}
-
-	// Clears retrieved texture from memory
-	stbi_image_free(data);
-
+	TerrainTexture* grass = new TerrainTexture("media/grass.jpg", TerrainTexture::GRASS, &terrainShaders);
+	grass->bindTexture();
 
 	//-------------------------
 	// TEXTURE 3: WATER
 	//-------------------------
 
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE3]);
-
-	// Selects x axis of texture bound to GL_TEXTURE_2D & sets to repeat beyond 
-	// normalised coordinates (WRAP_S)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	// Selects y axis and does the same (WRAP_T)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	// Texture scaling/filtering. Params: buffer type | downscaling (GL_TEXTURE_MIN_FILTER) or upscaling (GL_TEXTURE_MAG_FILTER) | filtering type
-	// Sets to use linear interpolation between adjacent mipmaps
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	// Sets to use linear interpolation upscaling (past largest mipmap texture) (default upscaling method)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Load texture and set width, height and colour channel params
-	data = stbi_load("media/water.jpg", &width, &height, &colourChannels, 0);
-
-	if (data) // If retrieval was successful
-	{
-		// Generation of texture from retrieved texture data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		// Automatically generates all required mipmaps on bound texture
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else // If retrieval unsuccessful
-	{
-		cout << "Failed to load texture.\n";
-		return -1;
-	}
-
-	// Clears retrieved texture from memory
-	stbi_image_free(data);
-
-
+	TerrainTexture* water = new TerrainTexture("media/water.jpg", TerrainTexture::WATER, &terrainShaders);
+	water->bindTexture();
 
 	/*******************************************************************************************
 	*
@@ -327,12 +183,6 @@ int main()
 
 	testLightVAO->unbind();
 
-	// Unbind all
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// For rectangle
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 
 	/*******************************************************************************************
 	* 
@@ -345,15 +195,6 @@ int main()
 	// until the 'X' is clicked on the window. It can also manually be changed, see 
 	// ProcessUserInput().
 
-	/*glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "textureInSand"), 0);
-	glUniform1i(glGetUniformLocation(program, "textureInGrass"), 1);
-	glUniform1i(glGetUniformLocation(program, "textureInWater"), 2);*/
-	terrainShaders.use();
-	terrainShaders.setInt("textureInSand", 0);
-	terrainShaders.setInt("textureInGrass", 1);
-	terrainShaders.setInt("textureInWater", 2);
-
 	while (!glfwWindowShouldClose(d->getWindow()))
 	{
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -363,13 +204,7 @@ int main()
 		deltaTime = currFrame - lastFrame;
 		lastFrame = currFrame;
 
-		//glUseProgram(program);
-
-		//// Set current light position for cube fragment shader to handle cube lighting
-		//glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
-
-		//// Set current camera position for specular lighting
-		//glUniform3f(viewPosIdx, cameraPos.x, cameraPos.y, cameraPos.z);
+		// Set current camera/light position for specular lighting
 		terrainShaders.use();
 		terrainShaders.setVec3("lightPos", lightPos);
 		terrainShaders.setVec3("viewPos", cameraPos);
@@ -387,9 +222,7 @@ int main()
 
 		glClearColor(light->getSkyColour().x, light->getSkyColour().y, light->getSkyColour().z, 1.0f);
 
-		// Clears the colour buffer. This is necessary to apply the colour we want.
-		// | GL_DEPTH_BUFFER_BIT allows for textures to have depth perception - otherwise
-		// they warp strangely
+		// Clears the colour buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -401,21 +234,8 @@ int main()
 
 		// Set our view for the MVP here.
 		// Initialise the view & relative positioning.
-		// First param  - position
-		// Second param - directional rotation - this is our default camera world pos + the front (-1 on z axis),
-		//				  giving forward camera movement
-		// Third param  - up vector (absolute up direction, setting -1.0f would flip the world, we have ours at y = 1.0f)
 		view = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		projection = perspective(radians(45.0f), (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->width / (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->height, 0.1f, 100.0f);
-
-
-		// Set value of colour and light colour
-		/*glUniform3f(objColourLoc, 1.0f, 1.0f, 1.0f);
-		glUniform3f(lightColourLoc, 1.0f, 1.0f, 1.0f);*/
-		terrainShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
-		terrainShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
-
-
 
 		// Create matrix, same as transform before
 		model = mat4(1.0f);
@@ -426,23 +246,22 @@ int main()
 		model = translate(model, terrainStart);
 
 		// Set our MVP matrix, mvp, to the uniform variable
-		/*glUniformMatrix4fv(modelIdx, 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(viewIdx, 1, GL_FALSE, value_ptr(view));
-		glUniformMatrix4fv(projIdx, 1, GL_FALSE, value_ptr(projection));*/
 		terrainShaders.setMat4("model", model);
 		terrainShaders.setMat4("view", view);
 		terrainShaders.setMat4("projection", projection);
 
+		// Set value of colour and light colour (white)
+		terrainShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
+		terrainShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
+
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw *** //
-		// ------------ //;
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE1]);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE2]);
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, buffers[TEXTURE3]);
-		//glBindVertexArray(VAOs[0]); // Bind buffer object to render; VAOs[0]
+		// ------------ //
+
+		// Draw terrain
+		sand->bindTexture();
+		grass->bindTexture();
+		water->bindTexture();
 		terrainVAO->bind();
 
 		glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);

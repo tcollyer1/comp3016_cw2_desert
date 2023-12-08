@@ -134,30 +134,30 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
-    <ClCompile Include="shaders\LoadShaders.cpp" />
     <ClCompile Include="src\cpp\Display.cpp" />
     <ClCompile Include="src\cpp\Light.cpp" />
     <ClCompile Include="src\cpp\main.cpp" />
     <ClCompile Include="src\cpp\Buffers.cpp" />
     <ClCompile Include="src\cpp\Terrain.cpp" />
+    <ClCompile Include="src\cpp\Texture.cpp" />
     <ClCompile Include="stbImageLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="shaders\LoadShaders.h" />
     <ClInclude Include="src\h\Display.h" />
     <ClInclude Include="src\h\Light.h" />
     <ClInclude Include="src\h\main.h" />
     <ClInclude Include="src\h\Buffers.h" />
     <ClInclude Include="src\h\Terrain.h" />
+    <ClInclude Include="src\h\Texture.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\fragmentShader.frag" />
+    <None Include="shaders\terrainShader.frag" />
     <None Include="shaders\lightShader.frag" />
     <None Include="shaders\lightShader.vert" />
     <None Include="shaders\modelShader.frag" />
     <None Include="shaders\modelShader.vert" />
-    <None Include="shaders\vertexShader.vert" />
+    <None Include="shaders\terrainShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
