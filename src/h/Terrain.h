@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#define TERRAIN_START		vec3(0.0f, -2.0f, -1.5f)
+
 #define RENDER_DIST			512							// Map width/height
 #define MAP_SIZE			(RENDER_DIST * RENDER_DIST) // Total map size
 
@@ -33,6 +35,8 @@ class Terrain
 {
 private:
 	enum Biome { GRASS, GRASS_DESERT, DESERT, DESERT_PATH, DESERT_OASIS, OASIS };
+
+	//const vec3 terrainStart = vec3(0.0f, -2.0f, -1.5f);
 
 	// Stores all vertices - triangles across the whole map, with 11 values for each triangle
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures

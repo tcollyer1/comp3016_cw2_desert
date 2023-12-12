@@ -24,6 +24,7 @@
 #include "..\h\Terrain.h"
 #include "..\h\Light.h"
 #include "..\h\Texture.h"
+#include "..\h\Camera.h"
 
 using namespace std;
 using namespace glm;
@@ -39,33 +40,6 @@ mat4 model;
 mat4 view;
 mat4 projection;
 
-/*******************************************************************************************
-*
-* CAMERA POSITION GLOBALS
-*
-*******************************************************************************************/
-// Relative pos within world space
-vec3 cameraPos = vec3(0.0f, 0.0f, 3.0f);
-// Travel direction - forward, since we've set it to negative on Z axis, which usually
-// points towards you
-vec3 cameraFront = vec3(0.0f, 0.0f, -1.0f);
-// Absolute up direction
-vec3 cameraUp = vec3(0.0f, 1.0f, 0.0f);
-
-// Horizontal rotation
-float cameraYaw = -90.0f;
-// Vertical rotation
-float cameraPitch = 0.0f;
-
-// If it's the first time the mouse is entering the window, this determines whether to set
-// default last x/y positions or not (below). If it's first entry, it has no previous 
-// positions so must set them
-bool mouseFirstEntry = true;
-
-// Camera positions from the last frame
-float cameraLastXPos = 0.0f;
-float cameraLastYPos = 0.0f;
-
 vec3 rockPos = vec3(0.0f);
 int treeOrShrub[MAP_SIZE];
 
@@ -79,15 +53,14 @@ float deltaTime = 0.0f;
 // Last value of time diff - last current frame
 float lastFrame = 0.0f;
 
+
+
 /*******************************************************************************************
 *
-* LIGHTING
+* CAMERA
 *
 *******************************************************************************************/
-// Set default light position
-vec3 lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
-
-const vec3 terrainStart = vec3(0.0f, -2.0f, -1.5f);
+Camera* camera = new Camera();
 
 int main()
 {
@@ -200,6 +173,8 @@ int main()
 	* 
 	*******************************************************************************************/
 
+	Camera::CameraInfo camInfo;
+
 	// This is the render loop. glfwWindowShouldClose() is always false (by default)
 	// until the 'X' is clicked on the window. It can also manually be changed, see 
 	// ProcessUserInput().
@@ -215,14 +190,14 @@ int main()
 
 		// Set current camera/light position for specular lighting
 		terrainShaders.use();
-		terrainShaders.setVec3("lightPos", lightPos);
-		terrainShaders.setVec3("viewPos", cameraPos);
+		terrainShaders.setVec3("lightPos", light->getLightPosition());
+		terrainShaders.setVec3("viewPos", camera->getCameraInfo().cameraPos);
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Process user input *** //
 		// -------------------------- //
-		ProcessUserInput(d->getWindow());
+		camera->processUserInput(d->getWindow(), deltaTime);
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Render *** //
@@ -243,7 +218,9 @@ int main()
 
 		// Set our view for the MVP here.
 		// Initialise the view & relative positioning.
-		view = lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		camInfo = camera->getCameraInfo();
+
+		view = lookAt(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
 		projection = perspective(radians(45.0f), (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->width / (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->height, 0.1f, 100.0f);
 
 		// Create matrix, same as transform before
@@ -252,7 +229,7 @@ int main()
 		// Look straight forward
 		model = rotate(model, radians(0.0f), vec3(1.0f, 0.0f, 0.0f));
 
-		model = translate(model, terrainStart);
+		model = translate(model, TERRAIN_START);
 
 		// Set our MVP matrix, mvp, to the uniform variable
 		terrainShaders.setMat4("model", model);
@@ -282,7 +259,7 @@ int main()
 		// Create matrix, same as transform before
 		modelShaders.use();
 
-		modelShaders.setVec3("lightPos", lightPos);
+		modelShaders.setVec3("lightPos", light->getLightPosition());
 		modelShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
 		modelShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
 
@@ -290,16 +267,16 @@ int main()
 		{
 			model = mat4(1.0f);
 
-			rockPos.x = terrainStart.x + treePositions[i].x;
-			rockPos.y = terrainStart.y + treePositions[i].y;
-			rockPos.z = terrainStart.z + treePositions[i].z;
+			rockPos.x = TERRAIN_START.x + treePositions[i].x;
+			rockPos.y = TERRAIN_START.y + treePositions[i].y;
+			rockPos.z = TERRAIN_START.z + treePositions[i].z;
 
 			model = translate(model, rockPos);
 
 			// Set our MVP matrix to the uniform variables
 			modelShaders.setMat4("view", view);
 			modelShaders.setMat4("projection", projection);
-			modelShaders.setVec3("viewPos", cameraPos);
+			modelShaders.setVec3("viewPos", camInfo.cameraPos);
 
 			// Draw model using enabled shaders
 			if (treeOrShrub[i])
@@ -334,7 +311,7 @@ int main()
 		model = mat4(1.0f);
 
 		// Move model
-		model = translate(model, lightPos);
+		model = translate(model, light->getLightPosition());
 
 		// Set our MVP matrix to the uniform variables
 		lightShaders.setMat4("model", model);
@@ -345,7 +322,7 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		// Move light position for next time
-		light->moveLight(glfwGetTime(), &lightPos);
+		light->moveLight(glfwGetTime());
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Refresh *** //
@@ -372,106 +349,22 @@ int main()
 	return 0;
 }
 
+// Callback function to handle mouse movement.
+void mouseCallback(GLFWwindow* pW, double x, double y)
+{
+	if (camera != NULL)
+	{
+		camera->mouseCallback(pW, x, y);
+	}
+	else
+	{
+		cout << "ERROR: camera is null\n";
+	}
+}
+
 // Callback function to adjust the window width/height for window resizing.
 void frameBufferSizeCallback(GLFWwindow* pW, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
 
-// Callback to handle mouse events
-void mouseCallback(GLFWwindow* pW, double x, double y)
-{
-	float xOffset, yOffset = 0.0f;
-
-	// Get last x/y positions if necessary
-	if (mouseFirstEntry)
-	{
-		cameraLastXPos = (float)x;
-		cameraLastYPos = (float)y;
-
-		mouseFirstEntry = false;
-	}
-
-	// Sets change value between last frame and current frame
-	xOffset = (float)x - cameraLastXPos;
-	yOffset = cameraLastYPos - (float)y; // Other way around - inverted y axis controls
-
-	// Set last positions to current in time for the next frame
-	cameraLastXPos = (float)x;
-	cameraLastYPos = (float)y;
-
-	// Like movement speed, set mouse sensitivity value, and apply to
-	// x/y camera pos changes
-	const float sensitivity = 0.075f;
-	xOffset *= sensitivity;
-	yOffset *= sensitivity;
-
-	// Readjust camera yaw (L/R) and pitch (U/D) based on x/y position changes
-	cameraYaw += xOffset;
-	cameraPitch += yOffset;
-
-	// Prevent camera flipping upside down - otherwise this would be infinite
-	if (cameraPitch > 89.0f)
-	{
-		cameraPitch = 89.0f;
-	}
-	else if (cameraPitch < -89.0f)
-	{
-		cameraPitch = -89.0f;
-	}
-
-	// Set direction vector
-	vec3 direction;
-	direction.x = cos(radians(cameraYaw)) * cos(radians(cameraPitch));
-	direction.y = sin(radians(cameraPitch));
-	direction.z = sin(radians(cameraYaw)) * cos(radians(cameraPitch));
-	cameraFront = normalize(direction);
-}
-
-void ProcessUserInput(GLFWwindow* pW)
-{
-	// Allows user to press escape to close the window
-	if (glfwGetKey(pW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(pW, true);
-	}
-
-	// Calculates movement speed based on time
-	float moveSpeed = 3.0f * deltaTime;
-
-	// Shift - run
-	if (glfwGetKey(pW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	{
-		moveSpeed *= 4;
-	}
-
-	// W - forward
-	if (glfwGetKey(pW, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		cameraPos += moveSpeed * cameraFront;
-	}
-
-	// S - backward
-	if (glfwGetKey(pW, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		cameraPos -= moveSpeed * cameraFront;
-	}
-
-	// D - right
-	if (glfwGetKey(pW, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		// Uses cross product using camera front position (-1 on z axis)
-		// and camera global up position (currently 1 on y axis) to get
-		// the sizeways (x) vector, hence left/right movement.
-		//
-		// The cross product basically takes any two vectors in a 3D space 
-		// and returns what the third vector is.
-		cameraPos += normalize(cross(cameraFront, cameraUp)) * moveSpeed;
-	}
-
-	// A - left
-	if (glfwGetKey(pW, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		cameraPos -= normalize(cross(cameraFront, cameraUp)) * moveSpeed;
-	}
-}

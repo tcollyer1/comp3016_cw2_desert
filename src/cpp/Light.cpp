@@ -6,6 +6,12 @@
 Light::Light()
 {
 	currSkyColour = day1;
+	lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
+}
+
+vec3 Light::getLightPosition()
+{
+	return (lightPos);
 }
 
 VAO::VertexData* Light::getVertices()
@@ -19,7 +25,7 @@ vec3 Light::getSkyColour()
 }
 
 // Rotate the light around the scene & adjust the skybox colour based on the light's position
-void Light::moveLight(double currTime, vec3* lightPos)
+void Light::moveLight(double currTime)
 {
 	// Light positions for each stage of day/night cycle
 	// Midday
@@ -50,8 +56,8 @@ void Light::moveLight(double currTime, vec3* lightPos)
 	float x = centreX - radius * sin(currTime * 0.25f);
 	float y = centreY + radius * cos(currTime * 0.25f);
 
-	lightPos->x = x;
-	lightPos->y = y;
+	lightPos.x = x;
+	lightPos.y = y;
 
 	if ((int)x == (int)day1X && (int)y == (int)day1Y)
 	{
@@ -96,7 +102,7 @@ void Light::moveLight(double currTime, vec3* lightPos)
 			tmaxZ = day1.z;
 
 			// Get the current distance between the target position (next point of lighting change) and current position
-			currentDist = sqrt(abs(day2X - lightPos->x) * abs(day2X - lightPos->x) + abs(day2Y - lightPos->y) * abs(day2Y - lightPos->y));
+			currentDist = sqrt(abs(day2X - lightPos.x) * abs(day2X - lightPos.x) + abs(day2Y - lightPos.y) * abs(day2Y - lightPos.y));
 		}
 		else if (lastSkyColour == day2)
 		{
@@ -112,7 +118,7 @@ void Light::moveLight(double currTime, vec3* lightPos)
 			tminZ = day3.z;
 			tmaxZ = day2.z;
 
-			currentDist = sqrt(abs(day3X - lightPos->x) * abs(day3X - lightPos->x) + abs(day3Y - lightPos->y) * abs(day3Y - lightPos->y));
+			currentDist = sqrt(abs(day3X - lightPos.x) * abs(day3X - lightPos.x) + abs(day3Y - lightPos.y) * abs(day3Y - lightPos.y));
 		}
 		else if (lastSkyColour == day3)
 		{
@@ -128,7 +134,7 @@ void Light::moveLight(double currTime, vec3* lightPos)
 			tminZ = day4.z;
 			tmaxZ = day3.z;
 
-			currentDist = sqrt(abs(day4X - lightPos->x) * abs(day4X - lightPos->x) + abs(day4Y - lightPos->y) * abs(day4Y - lightPos->y));
+			currentDist = sqrt(abs(day4X - lightPos.x) * abs(day4X - lightPos.x) + abs(day4Y - lightPos.y) * abs(day4Y - lightPos.y));
 		}
 		else if (lastSkyColour == day4)
 		{
@@ -144,7 +150,7 @@ void Light::moveLight(double currTime, vec3* lightPos)
 			tminZ = day1.z;
 			tmaxZ = day4.z;
 
-			currentDist = sqrt(abs(day1X - lightPos->x) * abs(day1X - lightPos->x) + abs(day1Y - lightPos->y) * abs(day1Y - lightPos->y));
+			currentDist = sqrt(abs(day1X - lightPos.x) * abs(day1X - lightPos.x) + abs(day1Y - lightPos.y) * abs(day1Y - lightPos.y));
 		}
 
 		newColour.x = (currentDist - rmin) / (rmax - rmin) * (tmaxX - tminX) + tminX;

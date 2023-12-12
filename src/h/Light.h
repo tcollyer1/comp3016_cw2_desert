@@ -19,9 +19,12 @@ public:
 
 	VAO::VertexData* getVertices();
 
-	void moveLight(double currTime, vec3* lightPos);
+	void moveLight(double currTime);
+	vec3 getLightPosition();
 
 	vec3 getSkyColour();
+
+
 
 private:
 	// Cube vertices - light source
@@ -77,4 +80,6 @@ private:
 	const vec3 day4 = vec3(0.9f, 0.0f, 0.2f); // Sunrise
 
 	vec3 currSkyColour;
+
+	vec3 lightPos;
 };

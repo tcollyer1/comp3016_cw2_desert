@@ -3,7 +3,7 @@
 #define WINDOW_WIDTH		glfwGetVideoMode(glfwGetPrimaryMonitor())->width - 100//1280
 #define WINDOW_HEIGHT		glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 100//720
 
-Display::Display(GLFWcursorposfun mouseCallback, GLFWframebuffersizefun frameBuffSizeCallback)
+Display::Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*frameBuffSizeCallback)(GLFWwindow*, int, int))
 {
 	error = false;
 

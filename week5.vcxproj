@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
+    <ClCompile Include="src\cpp\Camera.cpp" />
     <ClCompile Include="src\cpp\Display.cpp" />
     <ClCompile Include="src\cpp\Light.cpp" />
     <ClCompile Include="src\cpp\main.cpp" />
@@ -143,6 +144,7 @@
     <ClCompile Include="stbImageLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\h\Camera.h" />
     <ClInclude Include="src\h\Display.h" />
     <ClInclude Include="src\h\Light.h" />
     <ClInclude Include="src\h\main.h" />

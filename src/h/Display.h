@@ -14,7 +14,7 @@ private:
 
 public:
 
-	Display(GLFWcursorposfun mouseCallback, GLFWframebuffersizefun frameBuffSizeCallback);
+	Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*frameBuffSizeCallback)(GLFWwindow*, int, int));
 
 	GLFWwindow*		getWindow();
 	bool			checkErrors();
