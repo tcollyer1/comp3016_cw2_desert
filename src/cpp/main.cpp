@@ -26,6 +26,10 @@
 #include "..\h\Texture.h"
 #include "..\h\Camera.h"
 
+#define TREE_MAX 0.005f
+#define CACTUS_MAX 0.005f
+#define GRASS_MAX 0.01f
+
 using namespace std;
 using namespace glm;
 
@@ -40,8 +44,10 @@ mat4 model;
 mat4 view;
 mat4 projection;
 
-vec3 rockPos = vec3(0.0f);
+vec3 modelPos = vec3(0.0f);
 int treeOrShrub[MAP_SIZE];
+int rotation[MAP_SIZE];
+int scaling[MAP_SIZE];
 
 /*******************************************************************************************
 *
@@ -78,9 +84,9 @@ int main()
 	Shader lightShaders("shaders/lightShader.vert", "shaders/lightShader.frag");
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
-	Model rock("media/rock/Rock07-Base.obj");
-	Model shrub("media/shrub/free grass by adam127.obj"); // TODO: Model needs replacing, low quality
+	Model shrub("media/grass/scene.gltf"); // TODO replace grass
 	Model palmTree("media/palmTree/CordylineFREE.obj");
+	Model cactus("media/cactus/scene.gltf");
 
 	/*******************************************************************************************
 	*
@@ -155,14 +161,17 @@ int main()
 	testLightVAO->unbind();
 
 
-	// TODO: Generate list of all positions where trees must be drawn
-	vector<vec3> treePositions;
-	terrain->getTreePositions(&treePositions);
+	vector<vec3> grassModPos;
+	vector<vec3> oasisModPos;
+	terrain->getGrassModelPositions(&grassModPos);
+	terrain->getOasisModelPositions(&oasisModPos);
 
 	// Randomise whether tree or shrub is placed in grassy areas
-	for (int i = 0; i < treePositions.size(); i++)
+	for (int i = 0; i < MAP_SIZE; i++)
 	{
 		treeOrShrub[i] = rand() % 2;
+		rotation[i] = rand() % (180 - -180 + 1) + -180;
+		scaling[i] = rand() % (2 - 1 + 1) + 1;
 	}
 
 
@@ -174,6 +183,7 @@ int main()
 	*******************************************************************************************/
 
 	Camera::CameraInfo camInfo;
+	VAO::VertexData terrainVerts = *terrain->getVertices();
 
 	// This is the render loop. glfwWindowShouldClose() is always false (by default)
 	// until the 'X' is clicked on the window. It can also manually be changed, see 
@@ -249,25 +259,27 @@ int main()
 
 		glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
 
+		terrainVAO->unbind();
+
 		/////////////////////////////////////////////////////////////////////////////////////
-		// *** Draw Rock *** //
-		// ----------------- //;
+		// *** Draw Models *** //
+		// ------------------- //;
 		// Create matrix, same as transform before
 		modelShaders.use();
-
 
 		modelShaders.setVec3("lightPos", light->getLightPosition());
 		modelShaders.setVec3("lightColour", light->getLightColour());
 
-		for (int i = 0; i < treePositions.size(); i++)
+		// Draw grass biome models (grass, cacti)
+		for (int i = 0; i < grassModPos.size(); i++)
 		{
 			model = mat4(1.0f);
 
-			rockPos.x = TERRAIN_START.x + treePositions[i].x;
-			rockPos.y = TERRAIN_START.y + treePositions[i].y;
-			rockPos.z = TERRAIN_START.z + treePositions[i].z;
+			modelPos.x = TERRAIN_START.x + grassModPos[i].x;
+			modelPos.y = TERRAIN_START.y + grassModPos[i].y;
+			modelPos.z = TERRAIN_START.z + grassModPos[i].z;
 
-			model = translate(model, rockPos);
+			model = translate(model, modelPos);
 
 			// Set our MVP matrix to the uniform variables
 			modelShaders.setMat4("view", view);
@@ -277,8 +289,49 @@ int main()
 			// Draw model using enabled shaders
 			if (treeOrShrub[i])
 			{
+				// Scale down tree object, draw cactus
+				model = scale(model, vec3((float)(CACTUS_MAX / scaling[i])));
+				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, 0.0f));
+
+				modelShaders.setMat4("model", model);
+
+				cactus.Draw(modelShaders);
+			}
+			else
+			{
+				// Scale down grass object, draw grass
+				model = scale(model, vec3((float)(GRASS_MAX / scaling[i])));
+				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
+
+				modelShaders.setMat4("model", model);
+
+				shrub.Draw(modelShaders);
+			}
+			
+		}
+
+		// Draw desert oasis biome models (trees)
+		for (int i = 0; i < oasisModPos.size(); i++)
+		{
+			model = mat4(1.0f);
+
+			modelPos.x = TERRAIN_START.x + oasisModPos[i].x;
+			modelPos.y = TERRAIN_START.y + oasisModPos[i].y;
+			modelPos.z = TERRAIN_START.z + oasisModPos[i].z;
+
+			model = translate(model, modelPos);
+
+			// Set our MVP matrix to the uniform variables
+			modelShaders.setMat4("view", view);
+			modelShaders.setMat4("projection", projection);
+			modelShaders.setVec3("viewPos", camInfo.cameraPos);
+
+			if (treeOrShrub[i])
+			{
+				// Draw model using enabled shaders			
 				// Scale down tree object, draw tree
-				model = scale(model, vec3(0.005f, 0.005f, 0.005f));
+				model = scale(model, vec3(0.005f));
+				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, .0f));
 
 				modelShaders.setMat4("model", model);
 
@@ -287,13 +340,15 @@ int main()
 			else
 			{
 				// Scale down grass object, draw grass
-				model = scale(model, vec3(0.2f, 0.2f, 0.2f));
+				model = scale(model, vec3((float)(GRASS_MAX / scaling[i])));
+				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
 
 				shrub.Draw(modelShaders);
 			}
-			
+
+				
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -318,6 +373,8 @@ int main()
 
 		// Draw
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		testLightVAO->unbind();
 
 		// Move light position for next time
 		light->moveLight(glfwGetTime());

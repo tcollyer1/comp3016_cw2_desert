@@ -46,7 +46,8 @@ private:
 
 	bool			trees[MAP_SIZE];
 
-	vector<vec3>	treePositions;
+	vector<vec3>	grassModelPositions;
+	vector<vec3>	oasisModelPositions;
 
 	ivec3 terrainIndices[TOTAL_TRIANGLES];
 
@@ -73,5 +74,6 @@ public:
 
 	VAO::VertexData* getVertices();
 	ivec3* getIndices();
-	void getTreePositions(vector<vec3>* positions);
+	void getGrassModelPositions(vector<vec3>* positions);
+	void getOasisModelPositions(vector<vec3>* positions);
 };

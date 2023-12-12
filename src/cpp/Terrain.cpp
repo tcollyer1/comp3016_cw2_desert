@@ -13,7 +13,8 @@
 
 using namespace glm;
 
-#define MODEL_BOUND 0.99f
+#define GRASS_MODEL_BOUND 0.95f
+#define OASIS_MODEL_BOUND 0.99f
 
 Terrain::Terrain()
 {
@@ -94,8 +95,13 @@ bool Terrain::getIfModelPlacement(Biome biome, float noise)
 	switch (biome)
 	{
 	case GRASS:
-	case OASIS:
-		if (noise > MODEL_BOUND)
+		if (noise > GRASS_MODEL_BOUND)
+		{
+			model = true;
+		}
+		break;
+	case DESERT_OASIS:
+		if (noise > OASIS_MODEL_BOUND)
 		{
 			model = true;
 		}
@@ -107,11 +113,19 @@ bool Terrain::getIfModelPlacement(Biome biome, float noise)
 	return (model);
 }
 
-void Terrain::getTreePositions(vector<vec3>* positions)
+void Terrain::getGrassModelPositions(vector<vec3>* positions)
 {
-	for (int i = 0; i < treePositions.size(); i++)
+	for (int i = 0; i < grassModelPositions.size(); i++)
 	{
-		positions->push_back(treePositions[i]);
+		positions->push_back(grassModelPositions[i]);
+	}
+}
+
+void Terrain::getOasisModelPositions(vector<vec3>* positions)
+{
+	for (int i = 0; i < oasisModelPositions.size(); i++)
+	{
+		positions->push_back(oasisModelPositions[i]);
 	}
 }
 
@@ -217,19 +231,19 @@ void Terrain::generateLandscape()
 	int pSeed = rand() % 100;
 	pathNoise.SetSeed(pSeed);
 
-	// Perlin noise for tree placement
-	FastNoiseLite trees;
-	trees.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-	trees.SetFrequency(10.0f);
+	// Perlin noise for model placement
+	FastNoiseLite modelNoise;
+	modelNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+	modelNoise.SetFrequency(10.0f);
 	int tSeed = rand() % 100;
-	trees.SetSeed(tSeed);
+	modelNoise.SetSeed(tSeed);
 
 	// Terrain vertice index
 	int terrainIndex = 0;
 
 	float terrainVal = 0.0f;
 	float pathVal = 0.0f;
-	float treesVal = 0.0f;
+	float modelsVal = 0.0f;
 
 	Biome currBiome = DESERT;
 
@@ -250,7 +264,7 @@ void Terrain::generateLandscape()
 			// winding pathways
 			pathVal = abs(pathNoise.GetNoise((float)x, (float)y));
 
-			treesVal = trees.GetNoise((float)x, (float)y);
+			modelsVal = modelNoise.GetNoise((float)x, (float)y);
 
 			// Set random height value (random noise) calculated before,
 			// to the vertex y value. 
@@ -269,9 +283,9 @@ void Terrain::generateLandscape()
 				terrainVertices[terrainIndex].colours.a = 0.0f;
 
 				// Set grass/cacti here
-				if (getIfModelPlacement(currBiome, treesVal))
+				if (getIfModelPlacement(currBiome, modelsVal))
 				{
-					treePositions.push_back(vec3(terrainVertices[terrainIndex].vertices));
+					grassModelPositions.push_back(vec3(terrainVertices[terrainIndex].vertices));
 				}
 			}
 			// Grass-desert transition
@@ -297,6 +311,12 @@ void Terrain::generateLandscape()
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 0.5f;
 				terrainVertices[terrainIndex].colours.a = 0.0f;
+
+				// Set grass/cacti here
+				if (getIfModelPlacement(currBiome, modelsVal))
+				{
+					oasisModelPositions.push_back(vec3(terrainVertices[terrainIndex].vertices));
+				}
 			}
 			// Sandy pathway
 			else if (currBiome == DESERT_PATH)
