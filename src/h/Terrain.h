@@ -32,6 +32,8 @@ using namespace std;
 class Terrain
 {
 private:
+	enum Biome { GRASS, GRASS_DESERT, DESERT, DESERT_PATH, DESERT_OASIS, OASIS };
+
 	// Stores all vertices - triangles across the whole map, with 11 values for each triangle
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures
 	VAO::VertexData terrainVertices[MAP_SIZE];
@@ -58,6 +60,9 @@ private:
 	void generateLandscape();
 	void setTextureCoords();
 	void generateNormals();
+
+	Biome getBiome(float terrain, float path);
+	bool getIfModelPlacement(Biome biome, float noise);
 public:
 	Terrain();
 

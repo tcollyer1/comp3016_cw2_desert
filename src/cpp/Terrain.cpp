@@ -13,6 +13,8 @@
 
 using namespace glm;
 
+#define MODEL_BOUND 0.99f
+
 Terrain::Terrain()
 {
 	rowIndex			= 0;
@@ -32,9 +34,77 @@ Terrain::Terrain()
 	generateNormals();
 }
 
+// Returns all of the vertex data for the terrain.
 VAO::VertexData* Terrain::getVertices()
 {
 	return (terrainVertices);
+}
+
+// Gets the biome type at a given point on the terrain given the relevant
+// noise values
+Terrain::Biome Terrain::getBiome(float terrain, float path)
+{
+	Biome biome = DESERT;
+
+	// Grassy biome. This is where plants and cacti will also appear.
+	if (terrain >= 0.55f)
+	{
+		biome = GRASS;
+	}
+	// If the terrain is just below grass biome level - allow the textures
+	// to mix between grass/sand
+	else if (terrain < 0.55 && terrain >= 0.5)
+	{
+		biome = GRASS_DESERT;
+	}
+	// If terrain height is below -0.35, set to oasis
+	// (water) biome
+	else if (terrain <= -0.35f)
+	{
+		biome = OASIS;
+	}
+	// If the terrain is just above water biome level - allow the textures
+	// to mix between water/sand
+	// Trees will also appear here to flesh out this biome
+	else if (terrain > -0.35 && terrain <= -0.3)
+	{
+		biome = DESERT_OASIS;
+	}
+	// Generate pathways - alternate sand colour to add interest to main
+	// desert biome
+	else if (path < 0.2f)
+	{
+		biome = DESERT_PATH;
+	}
+	// Main desert (sand) biome.
+	else
+	{
+		biome = DESERT;
+	}
+
+	return (biome);
+}
+
+// Gets if a model should be placed at a given position, provided
+// the biome and generated noise value
+bool Terrain::getIfModelPlacement(Biome biome, float noise)
+{
+	bool model = false;
+
+	switch (biome)
+	{
+	case GRASS:
+	case OASIS:
+		if (noise > MODEL_BOUND)
+		{
+			model = true;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return (model);
 }
 
 void Terrain::getTreePositions(vector<vec3>* positions)
@@ -96,10 +166,6 @@ void Terrain::generateVertices()
 	{
 		// Generate the indices by mapping the above to chunks (1x1 squares)
 
-		// So top right should match top right,
-		// Bottom left should match bottom left,
-		// Bottom right (on bottom triangle) should be the opposite of top left (top triangle)
-
 		terrainIndices[i].x = colIndicesOffset + rowIndicesOffset;					// Top left				 _
 		terrainIndices[i].z = RENDER_DIST + colIndicesOffset + rowIndicesOffset;	// Bottom left			|/
 		terrainIndices[i].y = 1 + colIndicesOffset + rowIndicesOffset;				// Top right
@@ -138,13 +204,10 @@ void Terrain::generateLandscape()
 	// Assign perlin noise type for the map. This affects the y axis
 	FastNoiseLite terrainNoise;
 	terrainNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-
 	// Set noise scale
 	terrainNoise.SetFrequency(0.025f);
-
 	// Generate random seed
 	int seed = rand() % 100;
-
 	terrainNoise.SetSeed(seed);
 
 	// Perlin noise for pathway map
@@ -167,6 +230,8 @@ void Terrain::generateLandscape()
 	float terrainVal = 0.0f;
 	float pathVal = 0.0f;
 	float treesVal = 0.0f;
+
+	Biome currBiome = DESERT;
 
 	for (int x = 0; x < RENDER_DIST; x++)
 	{
@@ -193,58 +258,55 @@ void Terrain::generateLandscape()
 			// Multiply by 2 for greater height diversity.
 			terrainVertices[terrainIndex].vertices.y = (terrainVal / (1 + 0.5 + 0.25)) * 2;
 
-			// If the terrain height exceeds 0.35, green for grassy
-			// biome (where shrubs/cacti will appear)
-			if (terrainVal >= 0.55f)
+			currBiome = getBiome(terrainVal, pathVal);
+
+			// Grass
+			if (currBiome == GRASS)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.0f;
 				terrainVertices[terrainIndex].colours.g = 1.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
 				terrainVertices[terrainIndex].colours.a = 0.0f;
 
-				// Set a tree here
-				if (treesVal > 0.99f)
+				// Set grass/cacti here
+				if (getIfModelPlacement(currBiome, treesVal))
 				{
 					treePositions.push_back(vec3(terrainVertices[terrainIndex].vertices));
 				}
 			}
-			// If the terrain is just below grass biome level - allow the textures
-			// to mix between grass/sand
-			else if (terrainVal < 0.55 && terrainVal >= 0.5)
+			// Grass-desert transition
+			else if (currBiome == GRASS_DESERT)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.5f;
 				terrainVertices[terrainIndex].colours.g = 1.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
 				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
-			// If terrain height is below -0.35, set to oasis
-			// (water) biome
-			else if (terrainVal <= -0.35f)
+			// Water
+			else if (currBiome == OASIS)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 1.0f;
 				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
-			// If the terrain is just above water biome level - allow the textures
-			// to mix between water/sand
-			// Trees will also appear here to flesh out this biome
-			else if (terrainVal > -0.35 && terrainVal <= -0.3)
+			// Desert-water transition
+			else if (currBiome == DESERT_OASIS)
 			{
 				terrainVertices[terrainIndex].colours.r = 1.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 0.5f;
 				terrainVertices[terrainIndex].colours.a = 0.0f;
 			}
-			// Generate pathways - alternate sand colour
-			else if (pathVal < 0.2f)
+			// Sandy pathway
+			else if (currBiome == DESERT_PATH)
 			{
 				terrainVertices[terrainIndex].colours.r = 0.0f;
 				terrainVertices[terrainIndex].colours.g = 0.0f;
 				terrainVertices[terrainIndex].colours.b = 0.0f;
 				terrainVertices[terrainIndex].colours.a = 1.0f;
 			}
-			// Main desert (sand) biome. Only small rocks/grass here
+			// Normal sand
 			else
 			{
 				terrainVertices[terrainIndex].colours.r = 1.0f;
