@@ -31,6 +31,7 @@
 
 using namespace std;
 
+// Class for creating the main terrain object.
 class Terrain
 {
 private:

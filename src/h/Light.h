@@ -12,9 +12,12 @@
 
 using namespace glm;
 
+// Class for creating a movable light source
 class Light
 {
 public:
+	vec3 lightColour;
+
 	Light();
 
 	VAO::VertexData* getVertices();
@@ -23,9 +26,7 @@ public:
 	vec3 getLightPosition();
 
 	vec3 getSkyColour();
-
-
-
+	vec3 getLightColour();
 private:
 	// Cube vertices - light source
 	VAO::VertexData verticesCube[NUM_LIGHT_VERTICES] =
@@ -78,6 +79,11 @@ private:
 	const vec3 day2 = vec3(1.0f, 0.5f, 0.0f); // Sunset
 	const vec3 day3 = vec3(0.0f, 0.0f, 0.1f); // Midnight
 	const vec3 day4 = vec3(0.9f, 0.0f, 0.2f); // Sunrise
+
+	const vec3 day1L = vec3(1.0f); // Midday
+	const vec3 day2L = vec3(1.0f, 0.8f, 0.3f); // Sunset
+	const vec3 day3L = vec3(0.0f); // Midnight
+	const vec3 day4L = vec3(1.0f, 0.3f, 0.8f); // Sunrise
 
 	vec3 currSkyColour;
 

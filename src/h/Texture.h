@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// Class for handling textures on the terrain
 class TerrainTexture
 {
 public:

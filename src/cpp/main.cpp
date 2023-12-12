@@ -204,7 +204,7 @@ int main()
 		// -------------- //
 		// The colour to be displayed on the cleared window (RGBA)
 
-		glClearColor(light->getSkyColour().x, light->getSkyColour().y, light->getSkyColour().z, 1.0f);
+		glClearColor(light->getSkyColour().r, light->getSkyColour().g, light->getSkyColour().b, 1.0f);
 
 		// Clears the colour buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -226,9 +226,6 @@ int main()
 		// Create matrix, same as transform before
 		model = mat4(1.0f);
 
-		// Look straight forward
-		model = rotate(model, radians(0.0f), vec3(1.0f, 0.0f, 0.0f));
-
 		model = translate(model, TERRAIN_START);
 
 		// Set our MVP matrix, mvp, to the uniform variable
@@ -236,9 +233,8 @@ int main()
 		terrainShaders.setMat4("view", view);
 		terrainShaders.setMat4("projection", projection);
 
-		// Set value of colour and light colour (white)
-		terrainShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
-		terrainShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
+		// Set value of model colour and light colour
+		terrainShaders.setVec3("lightColour", light->getLightColour());
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw *** //
@@ -259,9 +255,9 @@ int main()
 		// Create matrix, same as transform before
 		modelShaders.use();
 
+
 		modelShaders.setVec3("lightPos", light->getLightPosition());
-		modelShaders.setVec3("objColour", 1.0f, 1.0f, 1.0f);
-		modelShaders.setVec3("lightColour", 1.0f, 1.0f, 1.0f);
+		modelShaders.setVec3("lightColour", light->getLightColour());
 
 		for (int i = 0; i < treePositions.size(); i++)
 		{
@@ -307,6 +303,8 @@ int main()
 		//glUseProgram(lightProg);
 		lightShaders.use();
 		testLightVAO->bind();
+
+		lightShaders.setVec3("lightColour", light->getLightColour());
 
 		model = mat4(1.0f);
 

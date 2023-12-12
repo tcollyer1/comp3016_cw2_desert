@@ -11,10 +11,12 @@
 
 using namespace glm;
 
+
 class VAO;
 class VBO;
 class IBO;
 
+// Class for creating and managing vertex buffer objects
 class VBO
 {
 protected:
@@ -28,6 +30,7 @@ protected:
 	friend VAO;
 };
 
+// Class for creating and managing index buffer objects
 class IBO
 {
 private:
@@ -45,6 +48,7 @@ protected:
 	friend VAO;
 };
 
+// Class for creating and managing vertex array objects
 class VAO
 {
 public:

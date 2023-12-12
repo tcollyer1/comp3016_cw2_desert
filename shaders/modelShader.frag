@@ -9,7 +9,7 @@ in vec3 FragPos;
 uniform sampler2D texture_diffuse1;
 
 uniform vec3 lightPos;
-uniform vec3 objColour;
+vec3 objColour = vec3(1.0f);
 uniform vec3 lightColour;
 uniform vec3 viewPos;
 

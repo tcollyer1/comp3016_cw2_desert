@@ -6,6 +6,7 @@
 Light::Light()
 {
 	currSkyColour = day1;
+	lightColour = vec3(1.0f);
 	lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
 }
 
@@ -22,6 +23,11 @@ VAO::VertexData* Light::getVertices()
 vec3 Light::getSkyColour()
 {
 	return (currSkyColour);
+}
+
+vec3 Light::getLightColour()
+{
+	return (lightColour);
 }
 
 // Rotate the light around the scene & adjust the skybox colour based on the light's position
@@ -43,9 +49,11 @@ void Light::moveLight(double currTime)
 
 	static vec3 lastSkyColour = day1;
 
-	vec3 colourDiff, newColour;
+	vec3 newColour, newLightColour;
 
 	float tmaxX, tmaxY, tmaxZ, tminX, tminY, tminZ, rmax, rmin, currentDist;
+
+	float tmaxXL, tmaxYL, tmaxZL, tminXL, tminYL, tminZL;
 
 	// Inflate radius so the light source can rotate around the centre point but remain outside of the actual terrain
 	float radius = MIDDLE_POS + 8.0f;
@@ -63,21 +71,29 @@ void Light::moveLight(double currTime)
 	{
 		currSkyColour = day1;
 		lastSkyColour = day1;
+
+		lightColour = day1L;
 	}
 	else if ((int)x == (int)day2X && (int)y == (int)day2Y)
 	{
 		currSkyColour = day2;
 		lastSkyColour = day2;
+
+		lightColour = day2L;
 	}
 	else if ((int)x == (int)day3X && (int)y == (int)day3Y)
 	{
 		currSkyColour = day3;
 		lastSkyColour = day3;
+
+		lightColour = day3L;
 	}
 	else if ((int)x == (int)day4X && (int)y == (int)day4Y)
 	{
 		currSkyColour = day4;
 		lastSkyColour = day4;
+
+		lightColour = day4L;
 	}
 	else
 	{
@@ -88,75 +104,100 @@ void Light::moveLight(double currTime)
 		// sky colour change (e.g. midday -> sunset, sunset -> midnight)
 		if (lastSkyColour == day1)
 		{
-			colourDiff = day2 - day1;
-
 			// Diff between last and target positions
 			rmax = sqrt(abs(day2X - day1X) * abs(day2X - day1X) + abs(day2Y - day1Y) * abs(day2Y - day1Y));
 
 			// tmin = minimum value, tmax = maximum value
-			tminX = day2.x;
-			tmaxX = day1.x;
-			tminY = day2.y;
-			tmaxY = day1.y;
-			tminZ = day2.z;
-			tmaxZ = day1.z;
+			tminX = day2.r;
+			tmaxX = day1.r;
+			tminY = day2.g;
+			tmaxY = day1.g;
+			tminZ = day2.b;
+			tmaxZ = day1.b;
+
+			tminXL = day2L.r;
+			tmaxXL = day1L.r;
+			tminYL = day2L.g;
+			tmaxYL = day1L.g;
+			tminZL = day2L.b;
+			tmaxZL = day1L.b;
 
 			// Get the current distance between the target position (next point of lighting change) and current position
 			currentDist = sqrt(abs(day2X - lightPos.x) * abs(day2X - lightPos.x) + abs(day2Y - lightPos.y) * abs(day2Y - lightPos.y));
 		}
 		else if (lastSkyColour == day2)
 		{
-			colourDiff = day3 - day2;
-
 			rmax = sqrt(abs(day3X - day2X) * abs(day3X - day2X) + abs(day3Y - day2Y) * abs(day3Y - day2Y));
 			rmin = 0.0f;
 
-			tminX = day3.x;
-			tmaxX = day2.x;
-			tminY = day3.y;
-			tmaxY = day2.y;
-			tminZ = day3.z;
-			tmaxZ = day2.z;
+			tminX = day3.r;
+			tmaxX = day2.r;
+			tminY = day3.g;
+			tmaxY = day2.g;
+			tminZ = day3.b;
+			tmaxZ = day2.b;
+
+			tminXL = day3L.r;
+			tmaxXL = day2L.r;
+			tminYL = day3L.g;
+			tmaxYL = day2L.g;
+			tminZL = day3L.b;
+			tmaxZL = day2L.b;
 
 			currentDist = sqrt(abs(day3X - lightPos.x) * abs(day3X - lightPos.x) + abs(day3Y - lightPos.y) * abs(day3Y - lightPos.y));
 		}
 		else if (lastSkyColour == day3)
 		{
-			colourDiff = day4 - day3;
-
 			rmax = sqrt(abs(day4X - day3X) * abs(day4X - day3X) + abs(day4Y - day3Y) * abs(day4Y - day3Y));
 			rmin = 0.0f;
 
-			tminX = day4.x;
-			tmaxX = day3.x;
-			tminY = day4.y;
-			tmaxY = day3.y;
-			tminZ = day4.z;
-			tmaxZ = day3.z;
+			tminX = day4.r;
+			tmaxX = day3.r;
+			tminY = day4.g;
+			tmaxY = day3.g;
+			tminZ = day4.b;
+			tmaxZ = day3.b;
+
+			tminXL = day4L.r;
+			tmaxXL = day3L.r;
+			tminYL = day4L.g;
+			tmaxYL = day3L.g;
+			tminZL = day4L.b;
+			tmaxZL = day3L.b;
 
 			currentDist = sqrt(abs(day4X - lightPos.x) * abs(day4X - lightPos.x) + abs(day4Y - lightPos.y) * abs(day4Y - lightPos.y));
 		}
 		else if (lastSkyColour == day4)
 		{
-			colourDiff = day1 - day4;
-
 			rmax = sqrt(abs(day1X - day4X) * abs(day1X - day4X) + abs(day1Y - day4Y) * abs(day1Y - day4Y));
 			rmin = 0.0f;
 
-			tminX = day1.x;
-			tmaxX = day4.x;
-			tminY = day1.y;
-			tmaxY = day4.y;
-			tminZ = day1.z;
-			tmaxZ = day4.z;
+			tminX = day1.r;
+			tmaxX = day4.r;
+			tminY = day1.g;
+			tmaxY = day4.g;
+			tminZ = day1.b;
+			tmaxZ = day4.b;
+
+			tminXL = day1L.r;
+			tmaxXL = day4L.r;
+			tminYL = day1L.g;
+			tmaxYL = day4L.g;
+			tminZL = day1L.b;
+			tmaxZL = day4L.b;
 
 			currentDist = sqrt(abs(day1X - lightPos.x) * abs(day1X - lightPos.x) + abs(day1Y - lightPos.y) * abs(day1Y - lightPos.y));
 		}
 
-		newColour.x = (currentDist - rmin) / (rmax - rmin) * (tmaxX - tminX) + tminX;
-		newColour.y = (currentDist - rmin) / (rmax - rmin) * (tmaxY - tminY) + tminY;
-		newColour.z = (currentDist - rmin) / (rmax - rmin) * (tmaxZ - tminZ) + tminZ;
+		newColour.r = (currentDist - rmin) / (rmax - rmin) * (tmaxX - tminX) + tminX;
+		newColour.g = (currentDist - rmin) / (rmax - rmin) * (tmaxY - tminY) + tminY;
+		newColour.b = (currentDist - rmin) / (rmax - rmin) * (tmaxZ - tminZ) + tminZ;
+
+		newLightColour.r = (currentDist - rmin) / (rmax - rmin) * (tmaxXL - tminXL) + tminXL;
+		newLightColour.g = (currentDist - rmin) / (rmax - rmin) * (tmaxYL - tminYL) + tminYL;
+		newLightColour.b = (currentDist - rmin) / (rmax - rmin) * (tmaxZL - tminZL) + tminZL;
 
 		currSkyColour = newColour;
+		lightColour = newLightColour;
 	}
 }
