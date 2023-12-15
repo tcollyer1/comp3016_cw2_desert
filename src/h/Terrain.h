@@ -1,4 +1,11 @@
+#ifndef TERRAIN_H
+
+#define TERRAIN_H
+
 #include "..\h\Buffers.h"
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 //GLM
 #include "glm/ext/vector_float3.hpp"
@@ -76,4 +83,8 @@ public:
 	ivec3* getIndices();
 	void getGrassModelPositions(vector<vec3>* positions);
 	void getOasisModelPositions(vector<vec3>* positions);
+	void offsetUserPos(vec3* pos);
+	bool isAtEdge(vec3 pos);
 };
+
+#endif

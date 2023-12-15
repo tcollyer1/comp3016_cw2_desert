@@ -1,9 +1,13 @@
+#include "..\h\Terrain.h"
+
+#define USER_HEIGHT 1.0f
+
 //GLM
 #include "glm/ext/vector_float3.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 
 using namespace std;
 using namespace glm;
@@ -26,14 +30,18 @@ public:
 		vec3 cameraUp;
 	};
 
-	Camera();
+	Camera(Terrain* t);
 	CameraInfo getCameraInfo();
 
 	void mouseCallback(GLFWwindow* pW, double x, double y);
 	void processUserInput(GLFWwindow* pW, float deltaTime);
 
 private:
+	enum CameraMode { FLY, WALK };
+
 	CameraInfo camInfo;
+	CameraMode mode;
+	Terrain* terrain;
 
 	// If it's the first time the mouse is entering the window, this determines whether to set
 	// default last x/y positions or not.
@@ -48,4 +56,7 @@ private:
 
 	// Vertical rotation
 	float cameraPitch;
+
+	void toggleFly();
+	void toggleWalk();
 };

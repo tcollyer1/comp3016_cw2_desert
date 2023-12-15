@@ -1,8 +1,5 @@
-
-
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+//#include <glad/glad.h>
+//#include <GLFW/glfw3.h>
 
 #include "..\h\Terrain.h"
 
@@ -437,4 +434,50 @@ void Terrain::generateNormals()
 		terrainVertices[i].normals.y /= (float)normalsCalc[i];
 		terrainVertices[i].normals.z /= (float)normalsCalc[i];
 	}
+}
+
+bool Terrain::isAtEdge(vec3 pos)
+{
+	bool atEdge = false;
+	vec3 terrainCoords;
+
+	terrainCoords.x = pos.x - TERRAIN_START.x;
+	terrainCoords.z = pos.z - TERRAIN_START.z;
+
+	if (terrainCoords.x < terrainVertices[BTM_LEFT].vertices.x
+		|| terrainCoords.x > terrainVertices[BTM_RIGHT].vertices.x
+		|| terrainCoords.z < terrainVertices[TOP_LEFT].vertices.z
+		|| terrainCoords.z > terrainVertices[BTM_LEFT].vertices.z)
+	{
+		atEdge = true;
+	}
+
+	return (atEdge);
+}
+
+void Terrain::offsetUserPos(vec3* pos)
+{
+	vec3 terrainCoords;
+
+	terrainCoords.x = pos->x - TERRAIN_START.x;
+	terrainCoords.y = pos->y - TERRAIN_START.y;
+	terrainCoords.z = pos->z - TERRAIN_START.z;
+
+	bool found = false;
+	int i = 0;
+
+	// Get up vector at this terrain vertice
+	while (i < MAP_SIZE && !found)
+	{
+		if ((terrainVertices[i].vertices.x == terrainCoords.x || (terrainCoords.x < terrainVertices[i].vertices.x + VERTICE_OFFSET && terrainCoords.x > terrainVertices[i].vertices.x - VERTICE_OFFSET))
+			&& (terrainVertices[i].vertices.z == terrainCoords.z || (terrainCoords.z < terrainVertices[i].vertices.z + VERTICE_OFFSET && terrainCoords.z > terrainVertices[i].vertices.z - VERTICE_OFFSET)))
+		{
+			terrainCoords.y = terrainVertices[i].vertices.y;
+			found = true;
+		}
+
+		i++;
+	}
+
+	pos->y = terrainCoords.y;	
 }

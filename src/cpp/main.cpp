@@ -44,7 +44,7 @@ mat4 model;
 mat4 view;
 mat4 projection;
 
-vec3 modelPos = vec3(0.0f);
+
 int treeOrShrub[MAP_SIZE];
 int rotation[MAP_SIZE];
 int scaling[MAP_SIZE];
@@ -66,10 +66,13 @@ float lastFrame = 0.0f;
 * CAMERA
 *
 *******************************************************************************************/
-Camera* camera = new Camera();
+Terrain* terrain = new Terrain();
+Camera* camera = new Camera(terrain);
 
 int main()
 {
+	vec3 modelPos = vec3(0.0f);
+
 	Display* d = new Display(mouseCallback, frameBufferSizeCallback);
 
 	if (d->checkErrors())
@@ -93,8 +96,6 @@ int main()
 	* CREATING THE TERRAIN
 	*
 	*******************************************************************************************/
-
-	Terrain* terrain = new Terrain();
 
 	VAO* terrainVAO = new VAO();
 	terrainVAO->bind();
@@ -186,8 +187,7 @@ int main()
 	VAO::VertexData terrainVerts = *terrain->getVertices();
 
 	// This is the render loop. glfwWindowShouldClose() is always false (by default)
-	// until the 'X' is clicked on the window. It can also manually be changed, see 
-	// ProcessUserInput().
+	// until the 'X' is clicked on the window or Esc is hit.
 
 	while (!glfwWindowShouldClose(d->getWindow()))
 	{

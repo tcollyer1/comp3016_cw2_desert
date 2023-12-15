@@ -52,6 +52,7 @@ protected:
 class VAO
 {
 public:
+	// Structure that stores all data for a given vertex
 	struct VertexData
 	{
 		vec3 vertices;
