@@ -91,7 +91,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// Don't move up or down when walking
 	actualFront.y = 0.0f;
 
-	bool atEdge;
+	bool atEdge = false;
 
 	// Allows user to press escape to close the window
 	if (glfwGetKey(pW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -105,7 +105,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// Shift - run
 	if (glfwGetKey(pW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		moveSpeed *= 3;
+		moveSpeed *= 2;
 	}
 
 	// Toggle fly/walk modes

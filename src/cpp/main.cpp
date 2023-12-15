@@ -20,10 +20,8 @@
 
 #include "..\h\main.h"
 #include "..\h\Display.h"
-#include "..\h\Buffers.h"
 #include "..\h\Terrain.h"
 #include "..\h\Light.h"
-#include "..\h\Texture.h"
 #include "..\h\Camera.h"
 
 #define TREE_MAX 0.005f
@@ -66,13 +64,10 @@ float lastFrame = 0.0f;
 * CAMERA
 *
 *******************************************************************************************/
-Terrain* terrain = new Terrain();
-Camera* camera = new Camera(terrain);
+Camera* camera = NULL;
 
 int main()
 {
-	vec3 modelPos = vec3(0.0f);
-
 	Display* d = new Display(mouseCallback, frameBufferSizeCallback);
 
 	if (d->checkErrors())
@@ -87,79 +82,15 @@ int main()
 	Shader lightShaders("shaders/lightShader.vert", "shaders/lightShader.frag");
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
-	Model shrub("media/grass/scene.gltf"); // TODO replace grass
+	Model shrub("media/grass/scene.gltf");
 	Model palmTree("media/palmTree/CordylineFREE.obj");
 	Model cactus("media/cactus/scene.gltf");
 
-	/*******************************************************************************************
-	*
-	* CREATING THE TERRAIN
-	*
-	*******************************************************************************************/
-
-	VAO* terrainVAO = new VAO();
-	terrainVAO->bind();
-
-	int verticesArrSize = sizeof(*terrain->getVertices()) * MAP_SIZE;
-	int indicesArrSize = sizeof(*terrain->getIndices()) * TOTAL_TRIANGLES;
-
-	// Bind terrain vertices and indices to buffers
-	terrainVAO->addBuffer(terrain->getVertices(), verticesArrSize, VAO::VERTICES);
-	terrainVAO->addBuffer(terrain->getIndices(), indicesArrSize, VAO::INDICES);
-
-	terrainVAO->enableAttribArrays();
-
-	terrainVAO->unbind();
-
-	/*******************************************************************************************
-	*
-	* TERRAIN TEXTURES
-	*
-	*******************************************************************************************/
-
-	//-------------------------
-	// TEXTURE 1: SAND
-	//-------------------------
-	TerrainTexture* sand = new TerrainTexture("media/sand.jpg", TerrainTexture::SAND, &terrainShaders);
-	sand->bindTexture();
-
-	//-------------------------
-	// TEXTURE 2: GRASS
-	//-------------------------
-
-	TerrainTexture* grass = new TerrainTexture("media/grass.jpg", TerrainTexture::GRASS, &terrainShaders);
-	grass->bindTexture();
-
-	//-------------------------
-	// TEXTURE 3: WATER
-	//-------------------------
-
-	TerrainTexture* water = new TerrainTexture("media/water.jpg", TerrainTexture::WATER, &terrainShaders);
-	water->bindTexture();
-
-	//-------------------------
-	// TEXTURE 4: SAND 2 (path)
-	//-------------------------
-
-	TerrainTexture* sand2 = new TerrainTexture("media/sandPath.jpg", TerrainTexture::SAND_2, &terrainShaders);
-	sand2->bindTexture();
-
-	/*******************************************************************************************
-	*
-	* CREATING LIGHT SOURCE
-	*
-	*******************************************************************************************/
-	VAO* testLightVAO = new VAO();
-	testLightVAO->bind();
-
+	Terrain* terrain = new Terrain(&terrainShaders);
+	camera = new Camera(terrain);
 	Light* light = new Light();
 
-	verticesArrSize = sizeof(*light->getVertices()) * NUM_LIGHT_VERTICES;
-	testLightVAO->addBuffer(light->getVertices(), verticesArrSize, VAO::VERTICES);
-
-	testLightVAO->enableAttribArrays();
-
-	testLightVAO->unbind();
+	vec3 modelPos = vec3(0.0f);
 
 
 	vector<vec3> grassModPos;
@@ -184,7 +115,7 @@ int main()
 	*******************************************************************************************/
 
 	Camera::CameraInfo camInfo;
-	VAO::VertexData terrainVerts = *terrain->getVertices();
+	//VAO::VertexData terrainVerts = *(terrain->getVertices());
 
 	// This is the render loop. glfwWindowShouldClose() is always false (by default)
 	// until the 'X' is clicked on the window or Esc is hit.
@@ -251,15 +182,7 @@ int main()
 		// ------------ //
 
 		// Draw terrain
-		sand->bindTexture();
-		grass->bindTexture();
-		water->bindTexture();
-		sand2->bindTexture();
-		terrainVAO->bind();
-
-		glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
-
-		terrainVAO->unbind();
+		terrain->drawTerrain();
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw Models *** //
@@ -331,7 +254,7 @@ int main()
 				// Draw model using enabled shaders			
 				// Scale down tree object, draw tree
 				model = scale(model, vec3(0.005f));
-				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, .0f));
+				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
 
@@ -355,9 +278,7 @@ int main()
 		// *** Draw the Light Cube *** //
 		// --------------------------- //
 		// Switch to light cube shaders, bind other VAO
-		//glUseProgram(lightProg);
 		lightShaders.use();
-		testLightVAO->bind();
 
 		lightShaders.setVec3("lightColour", light->getLightColour());
 
@@ -372,9 +293,7 @@ int main()
 		lightShaders.setMat4("projection", projection);
 
 		// Draw
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		testLightVAO->unbind();
+		light->drawLight();
 
 		// Move light position for next time
 		light->moveLight(glfwGetTime());

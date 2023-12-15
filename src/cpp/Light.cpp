@@ -8,16 +8,13 @@ Light::Light()
 	currSkyColour = day1;
 	lightColour = vec3(1.0f);
 	lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
+
+	createLightVAO();
 }
 
 vec3 Light::getLightPosition()
 {
 	return (lightPos);
-}
-
-VAO::VertexData* Light::getVertices()
-{
-	return (verticesCube);
 }
 
 vec3 Light::getSkyColour()
@@ -28,6 +25,28 @@ vec3 Light::getSkyColour()
 vec3 Light::getLightColour()
 {
 	return (lightColour);
+}
+
+void Light::createLightVAO()
+{
+	lightVAO = new VAO();
+	lightVAO->bind();
+
+	int verticesArrSize = sizeof(verticesCube);
+	lightVAO->addBuffer(verticesCube, verticesArrSize, VAO::VERTICES);
+
+	lightVAO->enableAttribArrays(BUF_VERTICES);
+
+	lightVAO->unbind();
+}
+
+void Light::drawLight()
+{
+	lightVAO->bind();
+
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+
+	lightVAO->unbind();
 }
 
 // Rotate the light around the scene & adjust the skybox colour based on the light's position

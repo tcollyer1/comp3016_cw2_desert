@@ -13,7 +13,7 @@ using namespace glm;
 #define GRASS_MODEL_BOUND 0.95f
 #define OASIS_MODEL_BOUND 0.99f
 
-Terrain::Terrain()
+Terrain::Terrain(Shader* shaders)
 {
 	rowIndex			= 0;
 	colVerticesOffset	= drawStartPos;
@@ -30,12 +30,51 @@ Terrain::Terrain()
 	generateLandscape();
 	setTextureCoords();
 	generateNormals();
+
+	createTerrainVAO();
+	setTextures(shaders);
 }
 
-// Returns all of the vertex data for the terrain.
-VAO::VertexData* Terrain::getVertices()
+void Terrain::drawTerrain()
 {
-	return (terrainVertices);
+	for (int i = 0; i < textures.size(); i++)
+	{
+		textures[i]->bindTexture();
+	}
+
+	terrainVAO->bind();
+
+	glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
+
+	terrainVAO->unbind();
+}
+
+void Terrain::createTerrainVAO()
+{
+	terrainVAO = new VAO();
+	terrainVAO->bind();
+
+	int verticesArrSize = sizeof(terrainVertices);
+	int indicesArrSize = sizeof(terrainIndices);
+
+	// Bind terrain vertices and indices to buffers
+	terrainVAO->addBuffer(terrainVertices, verticesArrSize, VAO::VERTICES);
+	terrainVAO->addBuffer(terrainIndices, indicesArrSize, VAO::INDICES);
+
+	terrainVAO->enableAttribArrays(BUF_VERTICES | BUF_COLOURS | BUF_NORMALS | BUF_TEXTURES);
+
+	terrainVAO->unbind();
+}
+
+void Terrain::setTextures(Shader* shaders)
+{
+	for (int i = 0; i < NUM_TEXTURES; i++)
+	{
+		TerrainTexture* tex = new TerrainTexture(assetsFolder + TerrainTexture::texNames[i], (TerrainTexture::TerrainType)i, shaders);
+		tex->bindTexture();
+
+		textures.push_back(tex);
+	}
 }
 
 // Gets the biome type at a given point on the terrain given the relevant
@@ -124,11 +163,6 @@ void Terrain::getOasisModelPositions(vector<vec3>* positions)
 	{
 		positions->push_back(oasisModelPositions[i]);
 	}
-}
-
-ivec3* Terrain::getIndices()
-{
-	return (terrainIndices);
 }
 
 // Generate all of the vertices and indices for the terrain
@@ -467,12 +501,16 @@ void Terrain::offsetUserPos(vec3* pos)
 	int i = 0;
 
 	// Get up vector at this terrain vertice
-	while (i < MAP_SIZE && !found)
+	while (i < MAP_SIZE - 1 && !found)
 	{
 		if ((terrainVertices[i].vertices.x == terrainCoords.x || (terrainCoords.x < terrainVertices[i].vertices.x + VERTICE_OFFSET && terrainCoords.x > terrainVertices[i].vertices.x - VERTICE_OFFSET))
 			&& (terrainVertices[i].vertices.z == terrainCoords.z || (terrainCoords.z < terrainVertices[i].vertices.z + VERTICE_OFFSET && terrainCoords.z > terrainVertices[i].vertices.z - VERTICE_OFFSET)))
 		{
-			terrainCoords.y = terrainVertices[i].vertices.y;
+			//float diffX = terrainVertices[i].vertices.x - terrainCoords.x;
+			//float diffZ = terrainVertices[i].vertices.z - terrainCoords.z;
+			//float crossVal = cross(vec3(diffX, 0.0f, 0.0f), vec3(0.0f, 0.0f, diffZ)).y;
+
+			terrainCoords.y = terrainVertices[i].vertices.y;// + crossVal;
 			found = true;
 		}
 

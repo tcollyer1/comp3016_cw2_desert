@@ -63,23 +63,32 @@ void VAO::addBuffer(const void* pData, int size, BufferType type)
 	}	
 }
 
-void VAO::enableAttribArrays()
+void VAO::enableAttribArrays(int data)
 {
-	// Vertices
-	glVertexAttribPointer(VERTICES, getCoordSize(VERTICES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, vertices));
-	glEnableVertexAttribArray(VERTICES);
-
-	// Normals
-	glVertexAttribPointer(NORMALS, getCoordSize(NORMALS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, normals));
-	glEnableVertexAttribArray(NORMALS);
-
-	// Textures
-	glVertexAttribPointer(TEXTURES, getCoordSize(TEXTURES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, textures));
-	glEnableVertexAttribArray(TEXTURES);
-
-	// Colours
-	glVertexAttribPointer(COLOURS, getCoordSize(COLOURS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, colours));
-	glEnableVertexAttribArray(COLOURS);
+	if (data & BUF_VERTICES)
+	{
+		// Vertices
+		glVertexAttribPointer(VERTICES, getCoordSize(VERTICES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, vertices));
+		glEnableVertexAttribArray(VERTICES);
+	}
+	if (data & BUF_NORMALS)
+	{
+		// Normals
+		glVertexAttribPointer(NORMALS, getCoordSize(NORMALS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, normals));
+		glEnableVertexAttribArray(NORMALS);
+	}
+	if (data & BUF_TEXTURES)
+	{
+		// Textures
+		glVertexAttribPointer(TEXTURES, getCoordSize(TEXTURES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, textures));
+		glEnableVertexAttribArray(TEXTURES);
+	}
+	if (data & BUF_COLOURS)
+	{
+		// Colours
+		glVertexAttribPointer(COLOURS, getCoordSize(COLOURS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, colours));
+		glEnableVertexAttribArray(COLOURS);
+	}
 }
 
 void VAO::bind()

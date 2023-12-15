@@ -20,14 +20,18 @@ public:
 
 	Light();
 
-	VAO::VertexData* getVertices();
-
 	void moveLight(double currTime);
 	vec3 getLightPosition();
 
 	vec3 getSkyColour();
 	vec3 getLightColour();
+
+	void createLightVAO();
+	void drawLight();
 private:
+
+	VAO* lightVAO;
+
 	// Cube vertices - light source
 	VAO::VertexData verticesCube[NUM_LIGHT_VERTICES] =
 	{
@@ -85,7 +89,7 @@ private:
 	const vec3 day1L = vec3(1.0f);				// Midday
 	const vec3 day2L = vec3(1.0f, 0.8f, 0.3f);	// Sunset
 	const vec3 day3L = vec3(0.0f);				// Midnight
-	const vec3 day4L = vec3(1.0f, 0.3f, 0.8f);	// Sunrise
+	const vec3 day4L = vec3(1.0f, 0.6f, 0.0f);	// Sunrise
 
 	vec3 currSkyColour;
 

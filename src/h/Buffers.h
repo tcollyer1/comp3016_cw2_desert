@@ -9,6 +9,11 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define BUF_VERTICES 1
+#define BUF_NORMALS 2
+#define BUF_TEXTURES 4
+#define BUF_COLOURS 8
+
 using namespace glm;
 
 
@@ -69,7 +74,7 @@ public:
 	void bind();
 	void unbind();
 
-	void enableAttribArrays();
+	void enableAttribArrays(int data);
 
 	GLuint getVBOId();
 	GLuint getIBOId();

@@ -3,6 +3,8 @@
 // Textures - header must be in C:/Users/Public/OpenGL/include
 #include "stb_image.h"
 
+const string TerrainTexture::texNames[NUM_TEXTURES] = { "sand.jpg", "grass.jpg", "water.jpg", "sandPath.jpg" };
+
 TerrainTexture::TerrainTexture(string path, TerrainType type, Shader* terrainShader)
 {
 	this->path		= path;
