@@ -39,6 +39,42 @@ Terrain::Terrain()
 
 	createTerrainVAO();
 	setTextures();
+
+	// Set up audio
+	engine = createIrrKlangDevice();
+
+	if (!engine)
+	{
+		cout << "\n[!] Error setting up irrKlang engine\n";
+	}
+
+	setSoundTree();
+}
+
+// Sets the tree that will have a 3D sound attached to it
+void Terrain::setSoundTree()
+{
+	int i = 0;
+	bool found = false;
+
+	while (i < oasisModelPositions.size() && !found)
+	{
+		if (modelType[i])
+		{
+			soundTree = vec3(oasisModelPositions[i]);
+			found = true;
+		}
+
+		i++;
+	}
+
+	sound = engine->play3D(treeSound.c_str(), vec3df(soundTree.x, soundTree.y, soundTree.z), true, false, true);
+	sound->setMinDistance(2.0f);
+}
+
+void Terrain::updateListenerPosition(vec3 pos, vec3 front)
+{
+	engine->setListenerPosition(vec3df(pos.x, pos.y, pos.z), vec3df(front.x, front.y, front.z));
 }
 
 void Terrain::setMVP(MVP* mvp)
@@ -79,6 +115,7 @@ void Terrain::createTerrainVAO()
 	terrainVAO->unbind();
 }
 
+// Generates and binds all the textures needed for the terrain.
 void Terrain::setTextures()
 {
 	for (int i = 0; i < NUM_TEXTURES; i++)
@@ -90,6 +127,7 @@ void Terrain::setTextures()
 	}
 }
 
+// Sends the current light source and camera view positions to the terrain shaders.
 void Terrain::setShaderPositions(vec3 lightPos, vec3 cameraPos)
 {
 	shaders->use();
@@ -97,22 +135,29 @@ void Terrain::setShaderPositions(vec3 lightPos, vec3 cameraPos)
 	shaders->setVec3("viewPos", cameraPos);
 }
 
+// Sends the current light colour to the terrain shaders.
 void Terrain::setShaderLightColour(vec3 colour)
 {
 	shaders->setVec3("lightColour", colour);
 }
 
-int Terrain::getModelType(int idx)
+// Returns either 0 (grass model) or 1 (tree or cactus model, depending on the biome) 
+// to determine a randomised model at a given position.
+const int Terrain::getModelType(int idx)
 {
 	return (modelType[idx]);
 }
 
-int Terrain::getRotation(int idx)
+// Retrieves a rotation value from a selection of randomly generated values to apply
+// to a given model.
+const int Terrain::getRotation(int idx)
 {
 	return (rotation[idx]);
 }
 
-int Terrain::getScale(int idx)
+// Retrieves a scaling factor (divisor) from a selection of randomly generated values
+// to apply to a given model.
+const int Terrain::getScale(int idx)
 {
 	return (scaling[idx]);
 }
@@ -189,6 +234,8 @@ bool Terrain::getIfModelPlacement(Biome biome, float noise)
 	return (model);
 }
 
+// Retrieves all of the established model positions for the grassy
+// biomes and copies them into the provided vector.
 void Terrain::getGrassModelPositions(vector<vec3>* positions)
 {
 	for (int i = 0; i < grassModelPositions.size(); i++)
@@ -197,6 +244,8 @@ void Terrain::getGrassModelPositions(vector<vec3>* positions)
 	}
 }
 
+// Retrieves all of the established model positions for the oasis
+// biomes and copies them into the provided vector.
 void Terrain::getOasisModelPositions(vector<vec3>* positions)
 {
 	for (int i = 0; i < oasisModelPositions.size(); i++)
@@ -339,7 +388,7 @@ void Terrain::generateLandscape()
 
 			// Set random height value (random noise) calculated before,
 			// to the vertex y value. 
-			// Divide by the sum of the 3 amplitudes to maintain values between 0-1 (?)
+			// Divide by the sum of the 3 amplitudes to maintain values between 0-1
 			// Multiply by 2 for greater height diversity.
 			terrainVertices[terrainIndex].vertices.y = (terrainVal / (1 + 0.5 + 0.25)) * 2;
 
@@ -549,13 +598,7 @@ Terrain::Biome Terrain::offsetUserPos(vec3* pos)
 		if ((terrainVertices[i].vertices.x == terrainCoords.x || (terrainCoords.x < terrainVertices[i].vertices.x + VERTICE_OFFSET && terrainCoords.x > terrainVertices[i].vertices.x - VERTICE_OFFSET))
 			&& (terrainVertices[i].vertices.z == terrainCoords.z || (terrainCoords.z < terrainVertices[i].vertices.z + VERTICE_OFFSET && terrainCoords.z > terrainVertices[i].vertices.z - VERTICE_OFFSET)))
 		{
-			//float diffX = terrainVertices[i].vertices.x - terrainCoords.x;
-			//float diffZ = terrainVertices[i].vertices.z - terrainCoords.z;
-			//float crossVal = cross(vec3(diffX, 0.0f, 0.0f), vec3(0.0f, 0.0f, diffZ)).y;
-
-			terrainCoords.y = terrainVertices[i].vertices.y;// + crossVal;
-
-			// TODO: Also return what biome it is - use colour map
+			terrainCoords.y = terrainVertices[i].vertices.y;
 			biomeColours = terrainVertices[i].colours;
 
 			found = true;

@@ -12,6 +12,9 @@
 #include <vector>
 #include <string>
 
+// irrKlang - audio
+#include <irrKlang/irrKlang.h>
+
 #define TERRAIN_START		vec3(0.0f, -2.0f, -1.5f)
 
 #define RENDER_DIST			512							// Map width/height
@@ -36,6 +39,8 @@
 
 
 using namespace std;
+using namespace irrklang;
+
 // Class for creating the main terrain object.
 class Terrain
 {
@@ -53,15 +58,23 @@ public:
 
 	void setMVP(MVP* mvp);
 
-	int getModelType(int idx);
-	int getRotation(int idx);
-	int getScale(int idx);
+	const int getModelType(int idx);
+	const int getRotation(int idx);
+	const int getScale(int idx);
 
 	void drawTerrain();
+
+	void updateListenerPosition(vec3 pos, vec3 front);
 
 private:
 
 	const string assetsFolder = "media/";
+	const string treeSound = "media/audio/birdSong.mp3";
+
+	ISoundEngine* engine;
+	ISound* sound;
+
+	vec3 soundTree;
 
 	Shader* shaders;
 
@@ -100,6 +113,8 @@ private:
 	void generateNormals();
 	void createTerrainVAO();
 	void setTextures();
+
+	void setSoundTree();
 
 	Biome getBiome(float terrain, float path);
 	bool getIfModelPlacement(Biome biome, float noise);

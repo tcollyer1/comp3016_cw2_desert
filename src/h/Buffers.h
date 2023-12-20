@@ -9,10 +9,10 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#define BUF_VERTICES 1
-#define BUF_NORMALS 2
-#define BUF_TEXTURES 4
-#define BUF_COLOURS 8
+#define BUF_VERTICES	1
+#define BUF_NORMALS		2
+#define BUF_TEXTURES	4
+#define BUF_COLOURS		8
 
 using namespace glm;
 
@@ -66,6 +66,7 @@ public:
 		vec2 textures;
 	};
 
+	// Indicates the type of data a buffer will store
 	enum BufferType { VERTICES, NORMALS, TEXTURES, COLOURS, NUM_ATTRIBS, INDICES };
 
 	VAO();

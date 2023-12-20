@@ -24,6 +24,7 @@ VAO::~VAO()
 	unbind();
 }
 
+// Gets the size of each coordinate (x2, x3 etc.) for a given type of buffer.
 int VAO::getCoordSize(BufferType type)
 {
 	int sz = 0;
@@ -47,6 +48,7 @@ int VAO::getCoordSize(BufferType type)
 	return (sz);
 }
 
+// Creates a new vertex or index buffer object.
 void VAO::addBuffer(const void* pData, int size, BufferType type)
 {
 	switch (type)
@@ -63,6 +65,7 @@ void VAO::addBuffer(const void* pData, int size, BufferType type)
 	}	
 }
 
+// Enables requested vertex arrays from the following: BUF_VERTICES | BUF_NORMALS | BUF_TEXTURES | BUF_COLOURS
 void VAO::enableAttribArrays(int data)
 {
 	if (data & BUF_VERTICES)

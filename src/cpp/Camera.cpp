@@ -99,6 +99,10 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	static	Terrain::Biome lastBiome	= Terrain::GRASS_DESERT;
 			Terrain::Biome biome		= Terrain::DESERT;
 
+	// Update the terrain with the current camera position for 3D audio
+	// front * -1 as audio panning appears reversed otherwise
+	terrain->updateListenerPosition(actualPos, actualFront * -1.0f);
+
 	// Don't move up or down when walking
 	actualFront.y = 0.0f;
 
