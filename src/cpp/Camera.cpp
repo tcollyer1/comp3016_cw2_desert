@@ -22,6 +22,14 @@ Camera::Camera(Terrain* t)
 
 	terrain				= t;
 	mode				= WALK;
+
+	// Set up audio
+	engine = createIrrKlangDevice();
+
+	if (!engine)
+	{
+		cout << "\n[!] Error setting up irrKlang engine\n";
+	}
 }
 
 Camera::CameraInfo Camera::getCameraInfo()
@@ -88,10 +96,16 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 
 	vec3 proposedPos = camInfo.cameraPos;
 
+	static	Terrain::Biome lastBiome	= Terrain::GRASS_DESERT;
+			Terrain::Biome biome		= Terrain::DESERT;
+
 	// Don't move up or down when walking
 	actualFront.y = 0.0f;
 
 	bool atEdge = false;
+
+	static bool origKeyPress = false;
+	bool keyPress = false;
 
 	// Allows user to press escape to close the window
 	if (glfwGetKey(pW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -123,8 +137,9 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	{
 		if (mode == WALK)
 		{
-			// TODO: only move according to terrain height (no flying):
-			terrain->offsetUserPos(&actualPos);
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
 
 			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
 			proposedPos += moveSpeed * actualFront;
@@ -146,7 +161,9 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	{
 		if (mode == WALK)
 		{
-			terrain->offsetUserPos(&actualPos);
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
 
 			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
 			proposedPos -= moveSpeed * actualFront;
@@ -171,7 +188,9 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 
 		if (mode == WALK)
 		{
-			terrain->offsetUserPos(&actualPos);
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
 
 			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
 			//camInfo.cameraPos += normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
@@ -192,9 +211,12 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// A - left
 	if (glfwGetKey(pW, GLFW_KEY_A) == GLFW_PRESS)
 	{
+
 		if (mode == WALK)
 		{
-			terrain->offsetUserPos(&actualPos);
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
 
 			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
 			proposedPos -= normalize(cross(actualFront, camInfo.cameraUp)) * moveSpeed;
@@ -208,6 +230,87 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 		else
 		{
 			camInfo.cameraPos -= normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+		}
+	}
+
+	// Handle movement sound effects
+	if (keyPress && (!origKeyPress || biome != lastBiome))
+	{
+		origKeyPress = true;
+
+		lastBiome = biome;
+
+		switch (biome)
+		{
+		case Terrain::DESERT:
+			if (sound2 != NULL) 
+			{ 
+				sound2->stop(); 
+				sound2->drop(); 
+				sound2 = NULL;
+			}
+			if (sound3 != NULL) 
+			{ 
+				sound3->stop(); 
+				sound3->drop();
+				sound3 = NULL;
+			}
+			sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+			break;
+		case Terrain::GRASS:
+			if (sound != NULL) 
+			{ 
+				sound->stop();
+				sound->drop();
+				sound = NULL;
+			}
+			if (sound3 != NULL) 
+			{ 
+				sound3->stop(); 
+				sound3->drop(); 
+				sound3 = NULL;
+			}
+			sound2 = engine->play2D(grassSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+			break;
+		default: // Water (oasis)
+			if (sound != NULL) 
+			{ 
+				sound->stop(); 
+				sound->drop();
+				sound = NULL;
+			}
+			if (sound2 != NULL) 
+			{ 
+				sound2->stop();
+				sound2->drop(); 
+				sound2 = NULL;
+			}
+			sound3 = engine->play2D(waterSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+			break;
+		}
+	}
+
+	if (!keyPress)
+	{
+		origKeyPress = false;
+
+		if (sound != NULL) 
+		{ 
+			sound->stop();
+			sound->drop();
+			sound = NULL;
+		}
+		if (sound2 != NULL) 
+		{ 
+			sound2->stop();
+			sound2->drop();
+			sound2 = NULL;
+		}
+		if (sound3 != NULL) 
+		{ 
+			sound3->stop();
+			sound3->drop();
+			sound3 = NULL;
 		}
 	}
 }

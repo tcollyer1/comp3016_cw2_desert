@@ -18,9 +18,6 @@
 #include <math.h>
 #include <vector>
 
-// irrKlang - audio
-#include <irrKlang/irrKlang.h>
-
 #include "..\h\main.h"
 #include "..\h\Display.h"
 #include "..\h\Terrain.h"

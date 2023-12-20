@@ -34,13 +34,32 @@
 #define CHUNK_TRIANGLES		2 // Two triangles per square chunk
 #define TOTAL_TRIANGLES		(ROW_CHUNKS * ROW_CHUNKS * CHUNK_TRIANGLES) // Total amount of triangles on the map
 
-using namespace std;
 
+using namespace std;
 // Class for creating the main terrain object.
 class Terrain
 {
-private:
+public:
 	enum Biome { GRASS, GRASS_DESERT, DESERT, DESERT_PATH, DESERT_OASIS, OASIS };
+	Terrain();
+
+	void getGrassModelPositions(vector<vec3>* positions);
+	void getOasisModelPositions(vector<vec3>* positions);
+	Biome offsetUserPos(vec3* pos);
+	bool isAtEdge(vec3 pos);
+
+	void setShaderPositions(vec3 lightPos, vec3 cameraPos);
+	void setShaderLightColour(vec3 colour);
+
+	void setMVP(MVP* mvp);
+
+	int getModelType(int idx);
+	int getRotation(int idx);
+	int getScale(int idx);
+
+	void drawTerrain();
+
+private:
 
 	const string assetsFolder = "media/";
 
@@ -84,25 +103,6 @@ private:
 
 	Biome getBiome(float terrain, float path);
 	bool getIfModelPlacement(Biome biome, float noise);
-
-public:
-	Terrain();
-
-	void getGrassModelPositions(vector<vec3>* positions);
-	void getOasisModelPositions(vector<vec3>* positions);
-	void offsetUserPos(vec3* pos);
-	bool isAtEdge(vec3 pos);
-
-	void setShaderPositions(vec3 lightPos, vec3 cameraPos);
-	void setShaderLightColour(vec3 colour);
-
-	void setMVP(MVP* mvp);
-
-	int getModelType(int idx);
-	int getRotation(int idx);
-	int getScale(int idx);
-
-	void drawTerrain();
 };
 
 #endif

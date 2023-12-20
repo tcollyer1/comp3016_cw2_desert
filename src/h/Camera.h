@@ -13,8 +13,12 @@
 
 //#include <GLFW/glfw3.h>
 
+// irrKlang - audio
+#include <irrKlang/irrKlang.h>
+
 using namespace std;
 using namespace glm;
+using namespace irrklang;
 
 class Camera
 {
@@ -46,6 +50,15 @@ private:
 	CameraInfo camInfo;
 	CameraMode mode;
 	Terrain* terrain;
+
+	ISoundEngine* engine;
+	ISound* sound;
+	ISound* sound2;
+	ISound* sound3;
+
+	const string sandSound = "media/audio/sandStep.mp3";
+	const string grassSound = "media/audio/grassStep.mp3";
+	const string waterSound = "media/audio/waterStep.mp3";
 
 	// If it's the first time the mouse is entering the window, this determines whether to set
 	// default last x/y positions or not.

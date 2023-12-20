@@ -196,6 +196,8 @@ void Light::moveLight(double currTime)
 			rmax = sqrt(abs(day2X - day1X) * abs(day2X - day1X) + abs(day2Y - day1Y) * abs(day2Y - day1Y));
 
 			// tmin = minimum value, tmax = maximum value
+			// These are used to scale the current sky/light colour and ambience sound volumes
+			// based on the position of the light between the last and next time of day.
 			tminX = day2.r;
 			tmaxX = day1.r;
 			tminY = day2.g;

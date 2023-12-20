@@ -529,9 +529,12 @@ bool Terrain::isAtEdge(vec3 pos)
 	return (atEdge);
 }
 
-void Terrain::offsetUserPos(vec3* pos)
+Terrain::Biome Terrain::offsetUserPos(vec3* pos)
 {
 	vec3 terrainCoords;
+	vec4 biomeColours;
+
+	Biome b;
 
 	terrainCoords.x = pos->x - TERRAIN_START.x;
 	terrainCoords.y = pos->y - TERRAIN_START.y;
@@ -551,11 +554,30 @@ void Terrain::offsetUserPos(vec3* pos)
 			//float crossVal = cross(vec3(diffX, 0.0f, 0.0f), vec3(0.0f, 0.0f, diffZ)).y;
 
 			terrainCoords.y = terrainVertices[i].vertices.y;// + crossVal;
+
+			// TODO: Also return what biome it is - use colour map
+			biomeColours = terrainVertices[i].colours;
+
 			found = true;
 		}
 
 		i++;
 	}
 
-	pos->y = terrainCoords.y;	
+	if (biomeColours.r == 1.0f || biomeColours.a == 1.0f)
+	{
+		b = DESERT;
+	}
+	else if (biomeColours.g == 1.0f)
+	{
+		b = GRASS;
+	}
+	else
+	{
+		b = OASIS;
+	}
+
+	pos->y = terrainCoords.y;
+
+	return (b);
 }
