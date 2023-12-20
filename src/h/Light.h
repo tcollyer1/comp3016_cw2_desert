@@ -9,12 +9,19 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// Audio
+#include <irrKlang/irrKlang.h>
+
+#include <string>
+
 #define NUM_FACES			6
 #define TRIANGLES_PER_FACE	6
 #define NUM_COORDS			3
 #define NUM_LIGHT_VERTICES	NUM_FACES * TRIANGLES_PER_FACE * NUM_COORDS
 
+using namespace std;
 using namespace glm;
+using namespace irrklang;
 
 // Class for creating a movable light source
 class Light
@@ -35,6 +42,16 @@ public:
 private:
 
 	VAO* lightVAO;
+
+	// Light class controls background ambient sound.
+	// (Sound depends on time of day, so in other words
+	// the light position)
+	ISoundEngine* engine;
+	ISound* sound;
+	ISound* sound2;
+
+	const string daySound = "media/audio/ambience.mp3";
+	const string nightSound = "media/audio/ambience2.mp3";
 
 	// Cube vertices - light source
 	VAO::VertexData verticesCube[NUM_LIGHT_VERTICES] =

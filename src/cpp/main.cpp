@@ -18,6 +18,9 @@
 #include <math.h>
 #include <vector>
 
+// irrKlang - audio
+#include <irrKlang/irrKlang.h>
+
 #include "..\h\main.h"
 #include "..\h\Display.h"
 #include "..\h\Terrain.h"
@@ -29,8 +32,11 @@
 #define CACTUS_MAX 0.005f
 #define GRASS_MAX 0.01f
 
+//const string sandWalk = "media/audio/sandStep.mp3";
+
 using namespace std;
 using namespace glm;
+using namespace irrklang;
 
 /*******************************************************************************************
 *
@@ -150,10 +156,8 @@ int main()
 		// Initialise the view & relative positioning.
 		camInfo = camera->getCameraInfo();
 
-		//view = lookAt(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
 		mvp->updateView(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
 
-		//projection = perspective(radians(45.0f), (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->width / (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->height, 0.1f, 100.0f);
 		mvp->setProjection();
 
 		// Create matrix, same as transform before
