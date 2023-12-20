@@ -23,6 +23,7 @@
 #include "..\h\Terrain.h"
 #include "..\h\Light.h"
 #include "..\h\Camera.h"
+#include "..\h\MVP.h"
 
 #define TREE_MAX 0.005f
 #define CACTUS_MAX 0.005f
@@ -37,15 +38,9 @@ using namespace glm;
 *
 *******************************************************************************************/
 // Global matrices for transformations
-mat4 transform;
 mat4 model;
 mat4 view;
 mat4 projection;
-
-
-int treeOrShrub[MAP_SIZE];
-int rotation[MAP_SIZE];
-int scaling[MAP_SIZE];
 
 /*******************************************************************************************
 *
@@ -78,7 +73,7 @@ int main()
 	}
 
 	// Set shaders & model
-	Shader terrainShaders("shaders/terrainShader.vert", "shaders/terrainShader.frag");
+	//Shader terrainShaders("shaders/terrainShader.vert", "shaders/terrainShader.frag");
 	Shader lightShaders("shaders/lightShader.vert", "shaders/lightShader.frag");
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
@@ -86,7 +81,8 @@ int main()
 	Model palmTree("media/palmTree/CordylineFREE.obj");
 	Model cactus("media/cactus/scene.gltf");
 
-	Terrain* terrain = new Terrain(&terrainShaders);
+	//Terrain* terrain = new Terrain(&terrainShaders);
+	Terrain* terrain = new Terrain();
 	camera = new Camera(terrain);
 	Light* light = new Light();
 
@@ -98,15 +94,6 @@ int main()
 	terrain->getGrassModelPositions(&grassModPos);
 	terrain->getOasisModelPositions(&oasisModPos);
 
-	// Randomise whether tree or shrub is placed in grassy areas
-	for (int i = 0; i < MAP_SIZE; i++)
-	{
-		treeOrShrub[i] = rand() % 2;
-		rotation[i] = rand() % (180 - -180 + 1) + -180;
-		scaling[i] = rand() % (2 - 1 + 1) + 1;
-	}
-
-
 	/*******************************************************************************************
 	* 
 	*	**** RENDER LOOP ****
@@ -115,9 +102,10 @@ int main()
 	*******************************************************************************************/
 
 	Camera::CameraInfo camInfo;
-	//VAO::VertexData terrainVerts = *(terrain->getVertices());
 
-	// This is the render loop. glfwWindowShouldClose() is always false (by default)
+	MVP* mvp = new MVP(); // Create MVP matrix
+
+	// This is the render loop.
 	// until the 'X' is clicked on the window or Esc is hit.
 
 	while (!glfwWindowShouldClose(d->getWindow()))
@@ -130,9 +118,10 @@ int main()
 		lastFrame = currFrame;
 
 		// Set current camera/light position for specular lighting
-		terrainShaders.use();
-		terrainShaders.setVec3("lightPos", light->getLightPosition());
-		terrainShaders.setVec3("viewPos", camera->getCameraInfo().cameraPos);
+		terrain->setShaderPositions(light->getLightPosition(), camera->getCameraInfo().cameraPos);
+		//terrainShaders.use();
+		//terrainShaders.setVec3("lightPos", light->getLightPosition());
+		//terrainShaders.setVec3("viewPos", camera->getCameraInfo().cameraPos);
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -161,21 +150,27 @@ int main()
 		// Initialise the view & relative positioning.
 		camInfo = camera->getCameraInfo();
 
-		view = lookAt(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
-		projection = perspective(radians(45.0f), (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->width / (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->height, 0.1f, 100.0f);
+		//view = lookAt(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
+		mvp->updateView(camInfo.cameraPos, camInfo.cameraPos + camInfo.cameraFront, camInfo.cameraUp);
+
+		//projection = perspective(radians(45.0f), (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->width / (float)glfwGetVideoMode(glfwGetPrimaryMonitor())->height, 0.1f, 100.0f);
+		mvp->setProjection();
 
 		// Create matrix, same as transform before
-		model = mat4(1.0f);
+		//model = mat4(1.0f);
+		mvp->resetModel();
 
-		model = translate(model, TERRAIN_START);
+		//model = translate(model, TERRAIN_START);
+		mvp->moveModel(TERRAIN_START);
 
 		// Set our MVP matrix, mvp, to the uniform variable
-		terrainShaders.setMat4("model", model);
-		terrainShaders.setMat4("view", view);
-		terrainShaders.setMat4("projection", projection);
+		//terrainShaders.setMat4("model", model);
+		//terrainShaders.setMat4("view", view);
+		//terrainShaders.setMat4("projection", projection);
+		terrain->setMVP(mvp);
 
 		// Set value of model colour and light colour
-		terrainShaders.setVec3("lightColour", light->getLightColour());
+		terrain->setShaderLightColour(light->getLightColour());
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw *** //
@@ -205,16 +200,16 @@ int main()
 			model = translate(model, modelPos);
 
 			// Set our MVP matrix to the uniform variables
-			modelShaders.setMat4("view", view);
-			modelShaders.setMat4("projection", projection);
+			modelShaders.setMat4("view", mvp->getView());
+			modelShaders.setMat4("projection", mvp->getProjection());
 			modelShaders.setVec3("viewPos", camInfo.cameraPos);
 
 			// Draw model using enabled shaders
-			if (treeOrShrub[i])
+			if (terrain->getModelType(i))
 			{
-				// Scale down tree object, draw cactus
-				model = scale(model, vec3((float)(CACTUS_MAX / scaling[i])));
-				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, 0.0f));
+				// Scale down cactus object, draw cactus
+				model = scale(model, vec3((float)(CACTUS_MAX / terrain->getScale(i))));
+				model = rotate(model, radians((float)terrain->getRotation(i)), vec3(0.0f, 1.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
 
@@ -223,7 +218,7 @@ int main()
 			else
 			{
 				// Scale down grass object, draw grass
-				model = scale(model, vec3((float)(GRASS_MAX / scaling[i])));
+				model = scale(model, vec3((float)(GRASS_MAX / terrain->getScale(i))));
 				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
@@ -245,16 +240,16 @@ int main()
 			model = translate(model, modelPos);
 
 			// Set our MVP matrix to the uniform variables
-			modelShaders.setMat4("view", view);
-			modelShaders.setMat4("projection", projection);
+			modelShaders.setMat4("view", mvp->getView());
+			modelShaders.setMat4("projection", mvp->getProjection());
 			modelShaders.setVec3("viewPos", camInfo.cameraPos);
 
-			if (treeOrShrub[i])
+			if (terrain->getModelType(i))
 			{
 				// Draw model using enabled shaders			
 				// Scale down tree object, draw tree
 				model = scale(model, vec3(0.005f));
-				model = rotate(model, radians((float)rotation[i]), vec3(0.0f, 1.0f, 0.0f));
+				model = rotate(model, radians((float)terrain->getRotation(i)), vec3(0.0f, 1.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
 
@@ -263,7 +258,7 @@ int main()
 			else
 			{
 				// Scale down grass object, draw grass
-				model = scale(model, vec3((float)(GRASS_MAX / scaling[i])));
+				model = scale(model, vec3((float)(GRASS_MAX / terrain->getScale(i))));
 				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
 
 				modelShaders.setMat4("model", model);
@@ -289,8 +284,8 @@ int main()
 
 		// Set our MVP matrix to the uniform variables
 		lightShaders.setMat4("model", model);
-		lightShaders.setMat4("view", view);
-		lightShaders.setMat4("projection", projection);
+		lightShaders.setMat4("view", mvp->getView());
+		lightShaders.setMat4("projection", mvp->getProjection());
 
 		// Draw
 		light->drawLight();

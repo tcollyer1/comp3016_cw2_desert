@@ -102,7 +102,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// Calculates movement speed based on time
 	float moveSpeed = 3.0f * deltaTime;
 
-	// Shift - run
+	// Shift - move faster
 	if (glfwGetKey(pW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
 		moveSpeed *= 2;

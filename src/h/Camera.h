@@ -1,11 +1,15 @@
-#include "..\h\Terrain.h"
+#ifndef CAMERA_H
+
+#define CAMERA_H
+
+#include "Terrain.h"
 
 #define USER_HEIGHT 1.0f
 
 //GLM
-#include "glm/ext/vector_float3.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+//#include "glm/ext/vector_float3.hpp"
+//#include <glm/ext/matrix_transform.hpp>
+//#include <glm/gtc/type_ptr.hpp>
 
 //#include <GLFW/glfw3.h>
 
@@ -60,3 +64,5 @@ private:
 	void toggleFly();
 	void toggleWalk();
 };
+
+#endif

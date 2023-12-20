@@ -2,16 +2,12 @@
 
 #define TERRAIN_H
 
-#include "..\h\Buffers.h"
-#include "..\h\Texture.h"
+#include "Buffers.h" // Includes GLM
+#include "Texture.h" // Includes shader loading
+#include "MVP.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-//GLM
-#include "glm/ext/vector_float3.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
 #include <string>
@@ -48,7 +44,7 @@ private:
 
 	const string assetsFolder = "media/";
 
-	//const vec3 terrainStart = vec3(0.0f, -2.0f, -1.5f);
+	Shader* shaders;
 
 	// Stores all vertices - triangles across the whole map, with 11 values for each triangle
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures
@@ -57,10 +53,11 @@ private:
 
 	VAO*			terrainVAO;
 
-	//TerrainTexture*	textures[NUM_TEXTURES];
 	vector<TerrainTexture*> textures;
 
-	bool			trees[MAP_SIZE];
+	int modelType[MAP_SIZE];
+	int rotation[MAP_SIZE];
+	int scaling[MAP_SIZE];
 
 	vector<vec3>	grassModelPositions;
 	vector<vec3>	oasisModelPositions;
@@ -83,18 +80,27 @@ private:
 	void setTextureCoords();
 	void generateNormals();
 	void createTerrainVAO();
-	void setTextures(Shader* shaders);
+	void setTextures();
 
 	Biome getBiome(float terrain, float path);
 	bool getIfModelPlacement(Biome biome, float noise);
 
 public:
-	Terrain(Shader* shaders);
+	Terrain();
 
 	void getGrassModelPositions(vector<vec3>* positions);
 	void getOasisModelPositions(vector<vec3>* positions);
 	void offsetUserPos(vec3* pos);
 	bool isAtEdge(vec3 pos);
+
+	void setShaderPositions(vec3 lightPos, vec3 cameraPos);
+	void setShaderLightColour(vec3 colour);
+
+	void setMVP(MVP* mvp);
+
+	int getModelType(int idx);
+	int getRotation(int idx);
+	int getScale(int idx);
 
 	void drawTerrain();
 };

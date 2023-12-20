@@ -10,20 +10,26 @@
 
 using namespace glm;
 
-#define GRASS_MODEL_BOUND 0.95f
-#define OASIS_MODEL_BOUND 0.99f
+#define GRASS_MODEL_BOUND	0.95f
+#define OASIS_MODEL_BOUND	0.99f
 
-Terrain::Terrain(Shader* shaders)
+Terrain::Terrain()
 {
+	shaders = new Shader("shaders/terrainShader.vert", "shaders/terrainShader.frag");
+
 	rowIndex			= 0;
 	colVerticesOffset	= drawStartPos;
 	rowVerticesOffset	= drawStartPos;
 	colIndicesOffset	= 0;
 	rowIndicesOffset	= 0;
 
+	// Generate random model rotations, scaling factors and randomise between
+	// tree/grass or cactus/grass on grassy and oasis biomes
 	for (int i = 0; i < MAP_SIZE; i++)
 	{
-		trees[i] = false;
+		modelType[i] = rand() % 2;
+		rotation[i] = rand() % (180 - -180 + 1) + -180;
+		scaling[i] = rand() % (2 - 1 + 1) + 1;
 	}
 
 	generateVertices();
@@ -32,7 +38,14 @@ Terrain::Terrain(Shader* shaders)
 	generateNormals();
 
 	createTerrainVAO();
-	setTextures(shaders);
+	setTextures();
+}
+
+void Terrain::setMVP(MVP* mvp)
+{
+	shaders->setMat4("model", mvp->getModel());
+	shaders->setMat4("view", mvp->getView());
+	shaders->setMat4("projection", mvp->getProjection());
 }
 
 void Terrain::drawTerrain()
@@ -66,7 +79,7 @@ void Terrain::createTerrainVAO()
 	terrainVAO->unbind();
 }
 
-void Terrain::setTextures(Shader* shaders)
+void Terrain::setTextures()
 {
 	for (int i = 0; i < NUM_TEXTURES; i++)
 	{
@@ -75,6 +88,33 @@ void Terrain::setTextures(Shader* shaders)
 
 		textures.push_back(tex);
 	}
+}
+
+void Terrain::setShaderPositions(vec3 lightPos, vec3 cameraPos)
+{
+	shaders->use();
+	shaders->setVec3("lightPos", lightPos);
+	shaders->setVec3("viewPos", cameraPos);
+}
+
+void Terrain::setShaderLightColour(vec3 colour)
+{
+	shaders->setVec3("lightColour", colour);
+}
+
+int Terrain::getModelType(int idx)
+{
+	return (modelType[idx]);
+}
+
+int Terrain::getRotation(int idx)
+{
+	return (rotation[idx]);
+}
+
+int Terrain::getScale(int idx)
+{
+	return (scaling[idx]);
 }
 
 // Gets the biome type at a given point on the terrain given the relevant
