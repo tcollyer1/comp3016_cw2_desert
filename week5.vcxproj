@@ -139,7 +139,6 @@
     <ClCompile Include="src\cpp\Light.cpp" />
     <ClCompile Include="src\cpp\main.cpp" />
     <ClCompile Include="src\cpp\Buffers.cpp" />
-    <ClCompile Include="src\cpp\ModelSet.cpp" />
     <ClCompile Include="src\cpp\MVP.cpp" />
     <ClCompile Include="src\cpp\ShaderInterface.cpp" />
     <ClCompile Include="src\cpp\Terrain.cpp" />

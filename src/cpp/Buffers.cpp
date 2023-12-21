@@ -102,31 +102,8 @@ void VAO::bind()
 
 void VAO::unbind()
 {
+	// Unbind VAO
 	glBindVertexArray(0);
-}
-
-GLuint VAO::getVBOId()
-{
-	GLuint id = 0;
-
-	if (verticesBuffer != NULL)
-	{
-		id = verticesBuffer->bufferId;
-	}
-
-	return (id);
-}
-
-GLuint VAO::getIBOId()
-{
-	GLuint id = 0;
-
-	if (indicesBuffer != NULL)
-	{
-		id = indicesBuffer->bufferId;
-	}
-
-	return (id);
 }
 
 VBO::VBO(const void* pData, int size)
@@ -139,6 +116,11 @@ VBO::VBO(const void* pData, int size)
 
 	// Allocate buffer memory for the vertices.
 	glBufferData(GL_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW);
+}
+
+VBO::~VBO()
+{
+	unbind();
 }
 
 void VBO::bind()
@@ -161,7 +143,7 @@ IBO::IBO(const void* pData, int size)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW);
 }
 
-int IBO::getCount()
+IBO::~IBO()
 {
-	return (idxCount);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

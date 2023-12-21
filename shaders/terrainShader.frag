@@ -25,7 +25,7 @@ vec2 tiledTex = TexturesFrag * 30;
 // Use generated colours as a template for the textures
 vec4 textureMap = vec4(colourFrag);
 
-// Distribute textures according to the texture map
+// Distribute textures according to the texture map (colours)
 vec4 sandTexColour = texture(texture0, tiledTex) * textureMap.r;
 vec4 grassTexColour = texture(texture1, tiledTex) * textureMap.g;
 vec4 waterTexColour = texture(texture2, tiledTex) * textureMap.b;
@@ -55,7 +55,6 @@ vec3 norm = normalize(Normal);
 
 	float specCalc = pow(max(dot(norm, halfwayDir), 0.0f), 32); // 32 -> shininess value
 	vec3 specular = specularStrength * specCalc * lightColour;
-
 
 	vec3 resultColour = (ambient + diffuse + specular) * objColour;
 

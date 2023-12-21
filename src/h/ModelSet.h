@@ -2,14 +2,12 @@
 
 #define MODELSET_H
 
-// Shaders
-//#include <learnopengl/shader_m.h>
+// Model loading
 #include <learnopengl/model.h>
 
 #include <vector>
 
 #include "ShaderInterface.h"
-
 #include "Terrain.h"
 
 // Model max scaling values
@@ -17,6 +15,7 @@
 #define CACTUS_MAX	0.005f
 #define GRASS_MAX	0.01f
 
+// Class for holding the models and drawing them.
 class ModelSet : public ShaderInterface
 {
 private:
@@ -43,6 +42,17 @@ public:
 		terrain->getOasisModelPositions(&oasisModPos);
 
 		modelPos = vec3(0.0f);
+	}
+
+	~ModelSet()
+	{
+		free(grass);
+		free(tree);
+		free(cactus);
+		free(terrain);
+
+		glUseProgram(0);
+		free(shaders);
 	}
 
 	// Asserts positions of each model generated during terrain creation

@@ -1,19 +1,18 @@
-// Language in use is GLSL - similar to C++
 // Vertex shader determines all the positions of the vertices of an object
 
 #version 460 // Establish GLSL version
  
-// Position with values retrieved from main.cpp
+// Position, normals and texture coordinates
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 textureCoords;
 
-// Normal out, fragment position out
+// Normal out, fragment/tex fragment position out
 out vec3 Normal;
 out vec3 FragPos;
 out vec2 TexturesFrag;
 
-// Uniform variable for MVP (model view projection) matrix
+// Uniform variable for MVP matrix
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;

@@ -1,6 +1,3 @@
-//#include <glad/glad.h>
-//#include <GLFW/glfw3.h>
-
 #include "..\h\Terrain.h"
 
 // Noise - height maps, model placement
@@ -10,8 +7,30 @@
 
 using namespace glm;
 
+// Defines the boundaries the noise values must exceed
+// for a model to be placed in the grass & oasis biomes
 #define GRASS_MODEL_BOUND	0.95f
 #define OASIS_MODEL_BOUND	0.99f
+
+Terrain::~Terrain()
+{
+	if (engine)
+	{
+		engine->drop();
+	}
+	if (sound)
+	{
+		sound->stop();
+		sound->drop();
+	}
+
+	free(sound);
+	free(engine);
+	free(terrainVAO);
+
+	glUseProgram(0);
+	free(shaders);
+}
 
 // Sets the tree that will have a 3D sound attached to it
 void Terrain::setSoundTree()
@@ -120,7 +139,7 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 {
 	Biome biome = DESERT;
 
-	// Grassy biome. This is where plants and cacti will also appear.
+	// Grassy biome. This is where grass and cacti will also appear.
 	if (terrain >= 0.55f)
 	{
 		biome = GRASS;
@@ -139,7 +158,8 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 	}
 	// If the terrain is just above water biome level - allow the textures
 	// to mix between water/sand
-	// Trees will also appear here to flesh out this biome
+	// Trees will also appear here to surround the water and flesh out the
+	// oasis biome
 	else if (terrain > -0.35 && terrain <= -0.3)
 	{
 		biome = DESERT_OASIS;
@@ -163,27 +183,27 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 // the biome and generated noise value
 bool Terrain::getIfModelPlacement(Biome biome, float noise)
 {
-	bool model = false;
+	bool placeModel = false;
 
 	switch (biome)
 	{
 	case GRASS:
 		if (noise > GRASS_MODEL_BOUND)
 		{
-			model = true;
+			placeModel = true;
 		}
 		break;
 	case DESERT_OASIS:
 		if (noise > OASIS_MODEL_BOUND)
 		{
-			model = true;
+			placeModel = true;
 		}
 		break;
 	default:
 		break;
 	}
 
-	return (model);
+	return (placeModel);
 }
 
 // Retrieves all of the established model positions for the grassy
@@ -303,7 +323,8 @@ void Terrain::generateLandscape()
 	int pSeed = rand() % 100;
 	pathNoise.SetSeed(pSeed);
 
-	// Perlin noise for model placement
+	// OpenSimplex noise for model placement - OS seems to give more "extreme" values closer together -
+	// when tested on terrain, there were considerably more hills and troughs, with less in between values.
 	FastNoiseLite modelNoise;
 	modelNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	modelNoise.SetFrequency(10.0f);
@@ -433,6 +454,8 @@ void Terrain::setTextureCoords()
 
 	int z = 0;
 
+	// Scale 2D texture coordinates across the terrain between 0.0 and 1.0.
+	// Treat the terrain as one large quad
 	for (int x = 0; x < MAP_SIZE; x++)
 	{
 		div_t divResultX;
@@ -450,6 +473,7 @@ void Terrain::setTextureCoords()
 			terrainVertices[x].textures.y = (float)divResultZ.rem / RENDER_DIST;
 		}
 
+		// Move onward a row when at the end
 		if (divResultX.rem == RENDER_DIST - 1)
 		{
 			z++;
@@ -468,6 +492,8 @@ void Terrain::generateNormals()
 		// If not at the right edge
 		if (divResult.rem != RENDER_DIST - 1)
 		{
+			// Splits each coordinate into being part of a quad - 
+			// uses neighbouring vertices
 			vec3 topLeft = vec3(terrainVertices[i].vertices);
 			vec3 topRight = vec3(terrainVertices[i + 1].vertices);
 
@@ -511,6 +537,8 @@ void Terrain::generateNormals()
 	}
 }
 
+// Determines if a given position is at the boundary of the terrain.
+// Used to ensure the user cannot walk off the map
 bool Terrain::isAtEdge(vec3 pos)
 {
 	bool atEdge = false;
@@ -530,6 +558,9 @@ bool Terrain::isAtEdge(vec3 pos)
 	return (atEdge);
 }
 
+// Returns the current biome at a given position (for audio purposes), 
+// as well as updating the given camera position's y coordinate with 
+// the y coordinate of the terrain at this x/z position.
 Terrain::Biome Terrain::offsetUserPos(vec3* pos)
 {
 	vec3 terrainCoords;
@@ -537,6 +568,8 @@ Terrain::Biome Terrain::offsetUserPos(vec3* pos)
 
 	Biome b;
 
+	// Terrain coordinates are the global camera coordinates, minus
+	// the terrain start values
 	terrainCoords.x = pos->x - TERRAIN_START.x;
 	terrainCoords.y = pos->y - TERRAIN_START.y;
 	terrainCoords.z = pos->z - TERRAIN_START.z;
@@ -559,6 +592,10 @@ Terrain::Biome Terrain::offsetUserPos(vec3* pos)
 		i++;
 	}
 
+	// Uses terrain colour map to determine biome.
+	// - Grass-desert transition is considered grass
+	// - Desert path is considered desert
+	// - Desert-oasis transition is considered oasis
 	if (biomeColours.r == 1.0f || biomeColours.a == 1.0f)
 	{
 		b = DESERT;

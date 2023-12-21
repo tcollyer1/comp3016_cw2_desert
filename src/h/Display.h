@@ -19,6 +19,7 @@ private:
 public:
 
 	Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*frameBuffSizeCallback)(GLFWwindow*, int, int));
+	~Display();
 
 	GLFWwindow*		getWindow();
 	bool			checkErrors();

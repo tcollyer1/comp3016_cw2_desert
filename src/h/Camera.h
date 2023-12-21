@@ -4,14 +4,9 @@
 
 #include "Terrain.h"
 
+// Offset from the actual height of the terrain so the user is not "crawling"
+// along the floor in walking mode
 #define USER_HEIGHT 1.0f
-
-//GLM
-//#include "glm/ext/vector_float3.hpp"
-//#include <glm/ext/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-
-//#include <GLFW/glfw3.h>
 
 // irrKlang - audio
 #include <irrKlang/irrKlang.h>
@@ -23,15 +18,12 @@ using namespace irrklang;
 class Camera
 {
 public:
-	//typedef void (Camera::*mouseFunc)(GLFWwindow*, double, double);
-
 	struct CameraInfo
 	{
 		// Position of the camera in world space
 		vec3 cameraPos;
 
-		// Travel direction - forward, since we've set it to negative on Z axis, which usually
-		// points towards you
+		// Travel direction
 		vec3 cameraFront;
 
 		// Absolute up direction
@@ -39,6 +31,8 @@ public:
 	};
 
 	Camera(Terrain* t);
+	~Camera();
+
 	CameraInfo getCameraInfo();
 
 	void mouseCallback(GLFWwindow* pW, double x, double y);

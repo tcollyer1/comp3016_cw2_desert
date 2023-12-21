@@ -12,6 +12,7 @@
 
 using namespace glm;
 
+// Class for handling the model/view/projection matrices.
 class MVP
 {
 private:

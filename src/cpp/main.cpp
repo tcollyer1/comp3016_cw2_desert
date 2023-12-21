@@ -94,13 +94,7 @@ int main()
 		// Clears the colour buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		/////////////////////////////////////////////////////////////////////////////////////
-		// *** Transform *** //
-		// ----------------- //
-		
-		// Dynamic transformations must be done in the rendering loop for constant updates.
-
-		// Set our view/projection for the MVP here.
+		// Set our view/projection for the MVP.
 		// Initialise the view & relative positioning.
 		camInfo = camera->getCameraInfo();
 
@@ -175,7 +169,8 @@ int main()
 	return 0;
 }
 
-// Callback function to handle mouse movement.
+// Wrapper callback function.
+// Calls the camera's callback to handle mouse movement
 void mouseCallback(GLFWwindow* pW, double x, double y)
 {
 	if (camera != NULL)
@@ -184,7 +179,7 @@ void mouseCallback(GLFWwindow* pW, double x, double y)
 	}
 	else
 	{
-		cout << "ERROR: camera is null\n";
+		cout << "ERROR: camera not initialised\n";
 	}
 }
 

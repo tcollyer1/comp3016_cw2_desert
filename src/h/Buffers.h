@@ -28,6 +28,7 @@ protected:
 	GLuint bufferId;
 
 	VBO(const void* pData, int size);
+	~VBO();
 
 	void bind();
 	void unbind();
@@ -40,15 +41,10 @@ class IBO
 {
 private:
 	GLuint bufferId;
-	int idxCount;
 
 protected:
 	IBO(const void* pData, int size);
-
-	void bind();
-	void unbind();
-
-	int getCount();
+	~IBO();
 
 	friend VAO;
 };
@@ -76,9 +72,6 @@ public:
 	void unbind();
 
 	void enableAttribArrays(int data);
-
-	GLuint getVBOId();
-	GLuint getIBOId();
 
 	void addBuffer(const void* pData, int size, BufferType type);
 

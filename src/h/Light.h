@@ -7,17 +7,11 @@
 
 #include "ShaderInterface.h"
 
-////GLM
-//#include "glm/ext/vector_float3.hpp"
-//#include <glm/ext/matrix_transform.hpp>
-//#include <glm/gtc/type_ptr.hpp>
-
 // Audio
 #include <irrKlang/irrKlang.h>
 
-//#include <learnopengl/shader_m.h>
-
 #include <string>
+
 
 #define NUM_FACES			6
 #define TRIANGLES_PER_FACE	6
@@ -48,9 +42,8 @@ public:
 		{
 			cout << "[!] Error setting up irrKlang engine (Light.cpp)\n";
 
-			engine = NULL;
-			sound = NULL;
-			sound2 = NULL;
+			sound	= NULL;
+			sound2	= NULL;
 		}
 		else
 		{
@@ -59,6 +52,8 @@ public:
 			sound2->setVolume(0.0f);
 		}
 	}
+
+	~Light();
 
 	void moveLight(double currTime);
 	vec3 getLightPosition();
@@ -83,7 +78,7 @@ private:
 	const string nightSound = "media/audio/ambience2.mp3";
 
 	// Cube vertices - light source
-	VAO::VertexData verticesCube[NUM_LIGHT_VERTICES] =
+	const VAO::VertexData verticesCube[NUM_LIGHT_VERTICES] =
 	{
 		// Positions (vertices only)	
 		{ vec3(-0.5f, -0.5f, -0.5f) }, // Face 1, triangle 1
@@ -141,8 +136,10 @@ private:
 	const vec3 day3L = vec3(0.0f);				// Midnight
 	const vec3 day4L = vec3(1.0f, 0.6f, 0.0f);	// Sunrise
 
+	// Holds the current sky (background) colour
 	vec3 currSkyColour;
 
+	// Holds the current light position
 	vec3 lightPos;
 };
 

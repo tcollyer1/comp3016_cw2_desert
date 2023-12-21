@@ -85,14 +85,12 @@ public:
 		setSoundTree();
 	}
 
+	~Terrain();
+
 	void getGrassModelPositions(vector<vec3>* positions);
 	void getOasisModelPositions(vector<vec3>* positions);
 	Biome offsetUserPos(vec3* pos);
 	bool isAtEdge(vec3 pos);
-
-	//void setShaderPositions(vec3 lightPos, vec3 cameraPos);
-	//void setShaderLightColour(vec3 colour);
-	//void setMVP(MVP* mvp);
 
 	const int getModelType(int idx);
 	const int getRotation(int idx);
@@ -110,9 +108,8 @@ private:
 	ISoundEngine* engine;
 	ISound* sound;
 
+	// Position of the model to assign the bird sound to (3D sound)
 	vec3 soundTreeModel;
-
-	//Shader* shaders;
 
 	// Stores all vertices - triangles across the whole map, with 11 values for each triangle
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures
@@ -121,15 +118,18 @@ private:
 
 	VAO*			terrainVAO;
 
+	// All textures to be used on the terrain
 	vector<TerrainTexture*> textures;
 
 	int modelType[MAP_SIZE];
 	int rotation[MAP_SIZE];
 	int scaling[MAP_SIZE];
 
+	// Model positions
 	vector<vec3>	grassModelPositions;
 	vector<vec3>	oasisModelPositions;
 
+	// Terrain indices
 	ivec3 terrainIndices[TOTAL_TRIANGLES];
 
 	// For drawing

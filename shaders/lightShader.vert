@@ -10,5 +10,6 @@ uniform mat4 projection;
 
 void main()
 {
+	// Position equal to the MVP, multiplied by the actual position of the light
 	gl_Position = projection * view * model * vec4(position.x, position.y, position.z, 1.0);
 }

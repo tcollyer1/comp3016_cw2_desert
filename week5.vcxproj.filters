@@ -48,9 +48,6 @@
     <ClCompile Include="src\cpp\MVP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cpp\ModelSet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\cpp\ShaderInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

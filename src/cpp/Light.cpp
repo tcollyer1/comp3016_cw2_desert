@@ -1,6 +1,34 @@
 #include "..\h\Light.h"
 
+// Offsets the light by this value when orbiting so it
+// doesn't clip the edge of the terrain.
 #define LIGHT_ORBIT_OFFSET	8.0f;
+
+Light::~Light()
+{
+	if (engine)
+	{
+		engine->drop();
+	}
+	if (sound)
+	{
+		sound->stop();
+		sound->drop();
+	}
+	if (sound2)
+	{
+		sound2->stop();
+		sound2->drop();
+	}
+
+	free(sound);
+	free(sound2);
+	free(engine);
+	free(lightVAO);
+
+	glUseProgram(0);
+	free(shaders);
+}
 
 vec3 Light::getLightPosition()
 {
@@ -17,6 +45,7 @@ vec3 Light::getLightColour()
 	return (lightColour);
 }
 
+// Creates VAO for the light source.
 void Light::createLightVAO()
 {
 	lightVAO = new VAO();
@@ -30,6 +59,7 @@ void Light::createLightVAO()
 	lightVAO->unbind();
 }
 
+// Draws the light source.
 void Light::drawLight()
 {
 	lightVAO->bind();
@@ -39,37 +69,48 @@ void Light::drawLight()
 	lightVAO->unbind();
 }
 
-// Rotate the light around the scene & adjust the skybox colour based on the light's position
+// Rotate the light around the scene & adjust the light colour, skybox colour 
+// and background sound volumes based on the light's position
 void Light::moveLight(double currTime)
 {
-	// Light positions for each stage of day/night cycle
+	// Light positions for each prominent stage of day/night cycle
 	// Midday
 	float day1X = MIDDLE_POS;
 	float day1Y = MIDDLE_POS + LIGHT_ORBIT_OFFSET;
+
 	// Sunset
 	float day2X = START_POS - LIGHT_ORBIT_OFFSET;
 	float day2Y = 0.0f;
+
 	// Midnight
 	float day3X = MIDDLE_POS;
 	float day3Y = -MIDDLE_POS - LIGHT_ORBIT_OFFSET;
+
 	// Sunrise
 	float day4X = END_POS + LIGHT_ORBIT_OFFSET;
 	float day4Y = 0.0f;
 
+	// Keeps track of the previous sky colour
 	static vec3 lastSkyColour = day1;
 
+	// New light & sky colours
 	vec3 newColour, newLightColour;
 
+	// These values are used for calculating the intermediate sky colour values
+	// for when the light is somewhere between midday/sunset/midnight/sunrise
 	float tmaxX, tmaxY, tmaxZ, tminX, tminY, tminZ, rmax, rmin, currentDist;
 
+	// These values are used for calculating the intermediate light colours and background audio
+	// volumes
 	float tmaxXL, tmaxYL, tmaxZL, tminXL, tminYL, tminZL, tmaxVol1, tmaxVol2, tminVol1, tminVol2;
 
 	// Inflate radius so the light source can rotate around the centre point but remain outside of the actual terrain
-	float radius = MIDDLE_POS + 8.0f;
+	float radius = MIDDLE_POS + LIGHT_ORBIT_OFFSET;
 
 	float centreX = MIDDLE_POS;
 	float centreY = 0.0f;
 
+	// Get the current x and y coordinates of the light this frame
 	float x = centreX - radius * sin(currTime * 0.25f);
 	float y = centreY + radius * cos(currTime * 0.25f);
 
@@ -83,7 +124,7 @@ void Light::moveLight(double currTime)
 
 		if (sound != NULL && sound2 != NULL)
 		{
-			// Pause night sound
+			// Silence night sound
 			sound2->setVolume(0.0f);
 
 			// Day sound becomes 100% volume
@@ -115,7 +156,7 @@ void Light::moveLight(double currTime)
 
 		if (sound != NULL && sound2 != NULL)
 		{
-			// Pause day sound
+			// Silence day sound
 			sound->setVolume(0.0f);
 
 			// Night sound becomes 100% volume
@@ -143,6 +184,8 @@ void Light::moveLight(double currTime)
 	else
 	{
 		// This section performs calculations for the sky colour, light colour and sound volumes
+		// for when the light is not exactly at the midday/sunset/midnight/sunrise positions
+		// for a gradual effect
 
 		float lastSoundVal = 0.0f;
 		float lastSound2Val = 0.0f;
@@ -270,6 +313,8 @@ void Light::moveLight(double currTime)
 			currentDist = sqrt(abs(day1X - lightPos.x) * abs(day1X - lightPos.x) + abs(day1Y - lightPos.y) * abs(day1Y - lightPos.y));
 		}
 
+
+		// Calculate all final values
 		newColour.r = (currentDist - rmin) / (rmax - rmin) * (tmaxX - tminX) + tminX;
 		newColour.g = (currentDist - rmin) / (rmax - rmin) * (tmaxY - tminY) + tminY;
 		newColour.b = (currentDist - rmin) / (rmax - rmin) * (tmaxZ - tminZ) + tminZ;
@@ -286,6 +331,8 @@ void Light::moveLight(double currTime)
 		newVolume1 = (currentDist - rmin) / (rmax - rmin) * (tmaxVol1 - tminVol1) + tminVol1;
 		newVolume2 = (currentDist - rmin) / (rmax - rmin) * (tmaxVol2 - tminVol2) + tminVol2;
 
+
+		// Assign final values
 		currSkyColour = newColour;
 		lightColour = newLightColour;
 

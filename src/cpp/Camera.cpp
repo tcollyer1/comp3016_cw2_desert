@@ -1,9 +1,7 @@
 #include "..\h\Camera.h"
-//#include "..\h\Terrain.h"
 
 Camera::Camera(Terrain* t)
 {
-	//camInfo.cameraPos	= vec3(0.0f, 0.0f, 3.0f);
 	// Set user (camera) position to start of the terrain
 	// + VERTICE_OFFSET for x/z so not directly at the edge
 	// + USER_HEIGHT for y so the user is not crawling or clipping through the ground
@@ -20,11 +18,16 @@ Camera::Camera(Terrain* t)
 	cameraLastXPos		= 0.0f;
 	cameraLastYPos		= 0.0f;
 
-	terrain				= t;
-	mode				= WALK;
+	terrain				= t;	// Give the camera access to the terrain so it can be used to adjust
+								// positioning, e.g. when walking across the terrain
+
+	mode				= WALK; // Walk mode by default
 
 	// Set up audio
-	engine = createIrrKlangDevice();
+	engine	= createIrrKlangDevice();
+	sound	= NULL;
+	sound2	= NULL;
+	sound3	= NULL;
 
 	if (!engine)
 	{
@@ -32,6 +35,36 @@ Camera::Camera(Terrain* t)
 	}
 }
 
+Camera::~Camera()
+{
+	if (engine)
+	{
+		engine->drop();
+	}
+	if (sound)
+	{
+		sound->stop();
+		sound->drop();
+	}
+	if (sound2)
+	{
+		sound2->stop();
+		sound2->drop();
+	}
+	if (sound3)
+	{
+		sound3->stop();
+		sound3->drop();
+	}
+
+	free(sound);
+	free(sound2);
+	free(sound3);
+	free(engine);
+	free(terrain);
+}
+
+// Returns position information about the camera
 Camera::CameraInfo Camera::getCameraInfo()
 {
 	return (camInfo);
@@ -237,6 +270,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 		}
 	}
 
+	// Only handle sound if engine is not NULL
 	if (engine)
 	{
 		// Handle movement sound effects
@@ -322,11 +356,14 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	}	
 }
 
+// Set the camera to fly (free movement) mode.
 void Camera::toggleFly()
 {
 	mode = FLY;
 }
 
+// Set the camera to walk (restricted to walking on the terrain only)
+// mode.
 void Camera::toggleWalk()
 {
 	if (mode != WALK)

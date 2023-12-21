@@ -19,6 +19,7 @@ protected:
 
 public:
 	ShaderInterface(string v, string f);
+	~ShaderInterface();
 
 	virtual void setShaderPositions(vec3 lightPos, vec3 cameraPos);
 	virtual void setShaderLightColour(vec3 colour);
