@@ -5,15 +5,6 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-// Shaders
-#include <learnopengl/shader_m.h>
-#include <learnopengl/model.h>
-
-// Assimp
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 // Other
 #include <math.h>
 #include <vector>
@@ -24,42 +15,25 @@
 #include "..\h\Light.h"
 #include "..\h\Camera.h"
 #include "..\h\MVP.h"
-
-#define TREE_MAX 0.005f
-#define CACTUS_MAX 0.005f
-#define GRASS_MAX 0.01f
+#include "..\h\ModelSet.h"
 
 using namespace std;
 using namespace glm;
-using namespace irrklang;
 
-/*******************************************************************************************
-*
-* MATRIX GLOBALS
-*
-*******************************************************************************************/
-// Global matrices for transformations
-mat4 model;
-mat4 view;
-mat4 projection;
-
-/*******************************************************************************************
-*
-* TIME GLOBALS
-*
-*******************************************************************************************/
 // Time diff - time taken between each frame change
 float deltaTime = 0.0f;
 // Last value of time diff - last current frame
 float lastFrame = 0.0f;
 
+// Shader paths
+const string tVertexShader = "shaders/terrainShader.vert";
+const string tFragShader = "shaders/terrainShader.frag";
+const string mVertexShader = "shaders/modelShader.vert";
+const string mFragShader = "shaders/modelShader.frag";
+const string lVertexShader = "shaders/lightShader.vert";
+const string lFragShader = "shaders/lightShader.frag";
 
-
-/*******************************************************************************************
-*
-* CAMERA
-*
-*******************************************************************************************/
+// Create camera
 Camera* camera = NULL;
 
 int main()
@@ -73,24 +47,12 @@ int main()
 		return -1;
 	}
 
-	// Set shaders & model
-	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
+	// Add terrain, light and models
+	Terrain* terrain = new Terrain(tVertexShader, tFragShader);
+	Light* light = new Light(lVertexShader, lFragShader);
+	ModelSet* models = new ModelSet(terrain, mVertexShader, mFragShader);
 
-	Model shrub("media/grass/scene.gltf");
-	Model palmTree("media/palmTree/CordylineFREE.obj");
-	Model cactus("media/cactus/scene.gltf");
-
-	Terrain* terrain = new Terrain();
 	camera = new Camera(terrain);
-	Light* light = new Light();
-
-	vec3 modelPos = vec3(0.0f);
-
-
-	vector<vec3> grassModPos;
-	vector<vec3> oasisModPos;
-	terrain->getGrassModelPositions(&grassModPos);
-	terrain->getOasisModelPositions(&oasisModPos);
 
 	/*******************************************************************************************
 	* 
@@ -99,12 +61,10 @@ int main()
 	* 
 	*******************************************************************************************/
 
+	// For storing camera position information during render loop
 	Camera::CameraInfo camInfo;
 
 	MVP* mvp = new MVP(); // Create MVP matrix
-
-	// This is the render loop.
-	// Runs until Esc is hit.
 
 	while (!glfwWindowShouldClose(d->getWindow()))
 	{
@@ -163,93 +123,12 @@ int main()
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw Models *** //
-		// ------------------- //;
-		// Create matrix, same as transform before
-		modelShaders.use();
+		// ------------------- //
 
-		modelShaders.setVec3("lightPos", light->getLightPosition());
-		modelShaders.setVec3("lightColour", light->getLightColour());
+		models->setShaderPositions(light->getLightPosition(), camInfo.cameraPos);
+		models->setShaderLightColour(light->getLightColour());
 
-		// Draw grass biome models (grass, cacti)
-		for (int i = 0; i < grassModPos.size(); i++)
-		{
-			model = mat4(1.0f);
-
-			modelPos.x = TERRAIN_START.x + grassModPos[i].x;
-			modelPos.y = TERRAIN_START.y + grassModPos[i].y;
-			modelPos.z = TERRAIN_START.z + grassModPos[i].z;
-
-			model = translate(model, modelPos);
-
-			// Set our MVP matrix to the uniform variables
-			modelShaders.setMat4("view", mvp->getView());
-			modelShaders.setMat4("projection", mvp->getProjection());
-			modelShaders.setVec3("viewPos", camInfo.cameraPos);
-
-			// Draw model using enabled shaders
-			if (terrain->getModelType(i))
-			{
-				// Scale down cactus object, draw cactus
-				model = scale(model, vec3((float)(CACTUS_MAX / terrain->getScale(i))));
-				model = rotate(model, radians((float)terrain->getRotation(i)), vec3(0.0f, 1.0f, 0.0f));
-
-				modelShaders.setMat4("model", model);
-
-				cactus.Draw(modelShaders);
-			}
-			else
-			{
-				// Scale down grass object, draw grass
-				model = scale(model, vec3((float)(GRASS_MAX / terrain->getScale(i))));
-				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-				modelShaders.setMat4("model", model);
-
-				shrub.Draw(modelShaders);
-			}
-			
-		}
-
-		// Draw desert oasis biome models (trees)
-		for (int i = 0; i < oasisModPos.size(); i++)
-		{
-			model = mat4(1.0f);
-
-			modelPos.x = TERRAIN_START.x + oasisModPos[i].x;
-			modelPos.y = TERRAIN_START.y + oasisModPos[i].y;
-			modelPos.z = TERRAIN_START.z + oasisModPos[i].z;
-
-			model = translate(model, modelPos);
-
-			// Set our MVP matrix to the uniform variables
-			modelShaders.setMat4("view", mvp->getView());
-			modelShaders.setMat4("projection", mvp->getProjection());
-			modelShaders.setVec3("viewPos", camInfo.cameraPos);
-
-			if (terrain->getModelType(i))
-			{
-				// Draw model using enabled shaders			
-				// Scale down tree object, draw tree
-				model = scale(model, vec3(0.005f));
-				model = rotate(model, radians((float)terrain->getRotation(i)), vec3(0.0f, 1.0f, 0.0f));
-
-				modelShaders.setMat4("model", model);
-
-				palmTree.Draw(modelShaders);
-			}
-			else
-			{
-				// Scale down grass object, draw grass
-				model = scale(model, vec3((float)(GRASS_MAX / terrain->getScale(i))));
-				model = rotate(model, radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-				modelShaders.setMat4("model", model);
-
-				shrub.Draw(modelShaders);
-			}
-
-				
-		}
+		models->drawModels(mvp);
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw the Light Cube *** //
@@ -314,4 +193,3 @@ void frameBufferSizeCallback(GLFWwindow* pW, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
-

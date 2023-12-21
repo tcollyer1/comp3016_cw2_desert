@@ -29,6 +29,16 @@ void MVP::moveModel(vec3 position)
 	model = translate(model, position);
 }
 
+void MVP::scaleModel(vec3 scalingFactor)
+{
+	model = scale(model, scalingFactor);
+}
+
+void MVP::rotateModel(float degrees, vec3 rotationVec)
+{
+	model = rotate(model, radians(degrees), rotationVec);
+}
+
 mat4 MVP::getModel()
 {
 	return (model);

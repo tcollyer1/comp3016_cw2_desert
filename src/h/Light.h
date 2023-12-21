@@ -3,17 +3,19 @@
 #define LIGHT_H
 
 #include "Buffers.h"
-#include "MVP.h"
+#include "Terrain.h"
 
-//GLM
-#include "glm/ext/vector_float3.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "ShaderInterface.h"
+
+////GLM
+//#include "glm/ext/vector_float3.hpp"
+//#include <glm/ext/matrix_transform.hpp>
+//#include <glm/gtc/type_ptr.hpp>
 
 // Audio
 #include <irrKlang/irrKlang.h>
 
-#include <learnopengl/shader_m.h>
+//#include <learnopengl/shader_m.h>
 
 #include <string>
 
@@ -27,12 +29,36 @@ using namespace glm;
 using namespace irrklang;
 
 // Class for creating a movable light source
-class Light
+class Light : public ShaderInterface
 {
 public:
 	vec3 lightColour;
 
-	Light();
+	Light(string vertexShader, string fragShader) : ShaderInterface(vertexShader, fragShader)
+	{
+		currSkyColour = day1;
+		lightColour = vec3(1.0f);
+		lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
+
+		createLightVAO();
+
+		engine = createIrrKlangDevice();
+
+		if (!engine)
+		{
+			cout << "[!] Error setting up irrKlang engine (Light.cpp)\n";
+
+			engine = NULL;
+			sound = NULL;
+			sound2 = NULL;
+		}
+		else
+		{
+			sound = engine->play2D(daySound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+			sound2 = engine->play2D(nightSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+			sound2->setVolume(0.0f);
+		}
+	}
 
 	void moveLight(double currTime);
 	vec3 getLightPosition();
@@ -42,9 +68,6 @@ public:
 
 	void createLightVAO();
 	void drawLight();
-
-	void setMVP(MVP* mvp);
-	void setShaderLightColour(vec3 colour);
 private:
 
 	VAO* lightVAO;
@@ -55,8 +78,6 @@ private:
 	ISoundEngine* engine;
 	ISound* sound;
 	ISound* sound2;
-
-	Shader* shaders;
 
 	const string daySound = "media/audio/ambience.mp3";
 	const string nightSound = "media/audio/ambience2.mp3";

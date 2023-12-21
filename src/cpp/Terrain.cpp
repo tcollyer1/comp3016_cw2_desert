@@ -13,44 +13,6 @@ using namespace glm;
 #define GRASS_MODEL_BOUND	0.95f
 #define OASIS_MODEL_BOUND	0.99f
 
-Terrain::Terrain()
-{
-	shaders = new Shader("shaders/terrainShader.vert", "shaders/terrainShader.frag");
-
-	rowIndex			= 0;
-	colVerticesOffset	= drawStartPos;
-	rowVerticesOffset	= drawStartPos;
-	colIndicesOffset	= 0;
-	rowIndicesOffset	= 0;
-
-	// Generate random model rotations, scaling factors and randomise between
-	// tree/grass or cactus/grass models on grassy and oasis biomes
-	for (int i = 0; i < MAP_SIZE; i++)
-	{
-		modelType[i] = rand() % 2;
-		rotation[i] = rand() % (180 - -180 + 1) + -180;
-		scaling[i] = rand() % (2 - 1 + 1) + 1;
-	}
-
-	generateVertices();
-	generateLandscape();
-	setTextureCoords();
-	generateNormals();
-
-	createTerrainVAO();
-	setTextures();
-
-	// Set up audio
-	engine = createIrrKlangDevice();
-
-	if (!engine)
-	{
-		cout << "[!] Error setting up irrKlang engine (Terrain.cpp)\n";
-	}
-
-	setSoundTree();
-}
-
 // Sets the tree that will have a 3D sound attached to it
 void Terrain::setSoundTree()
 {
@@ -83,15 +45,6 @@ void Terrain::updateListenerPosition(vec3 pos, vec3 front)
 	{
 		engine->setListenerPosition(vec3df(pos.x, pos.y, pos.z), vec3df(front.x, front.y, front.z));
 	}	
-}
-
-// Sends MVP data to the terrain shaders
-void Terrain::setMVP(MVP* mvp)
-{
-	shaders->use();
-	shaders->setMat4("model", mvp->getModel());
-	shaders->setMat4("view", mvp->getView());
-	shaders->setMat4("projection", mvp->getProjection());
 }
 
 // Draws the terrain data within the terrain VAO
@@ -138,21 +91,6 @@ void Terrain::setTextures()
 
 		textures.push_back(tex);
 	}
-}
-
-// Sends the current light source and camera view positions to the terrain shaders.
-void Terrain::setShaderPositions(vec3 lightPos, vec3 cameraPos)
-{
-	shaders->use();
-	shaders->setVec3("lightPos", lightPos);
-	shaders->setVec3("viewPos", cameraPos);
-}
-
-// Sends the current light colour to the terrain shaders.
-void Terrain::setShaderLightColour(vec3 colour)
-{
-	shaders->use();
-	shaders->setVec3("lightColour", colour);
 }
 
 // Returns either 0 (grass model) or 1 (tree or cactus model, depending on the biome) 

@@ -6,8 +6,10 @@
 #include "Texture.h" // Includes shader loading
 #include "MVP.h"
 
+#include "ShaderInterface.h"
+
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 
 #include <vector>
 #include <string>
@@ -42,21 +44,55 @@ using namespace std;
 using namespace irrklang;
 
 // Class for creating the main terrain object.
-class Terrain
+class Terrain : public ShaderInterface
 {
 public:
 	enum Biome { GRASS, GRASS_DESERT, DESERT, DESERT_PATH, DESERT_OASIS, OASIS };
-	Terrain();
+
+	Terrain(string vertexShader, string fragShader) : ShaderInterface(vertexShader, fragShader)
+	{
+		rowIndex = 0;
+		colVerticesOffset = drawStartPos;
+		rowVerticesOffset = drawStartPos;
+		colIndicesOffset = 0;
+		rowIndicesOffset = 0;
+
+		// Generate random model rotations, scaling factors and randomise between
+		// tree/grass or cactus/grass models on grassy and oasis biomes
+		for (int i = 0; i < MAP_SIZE; i++)
+		{
+			modelType[i] = rand() % 2;
+			rotation[i] = rand() % (180 - -180 + 1) + -180;
+			scaling[i] = rand() % (2 - 1 + 1) + 1;
+		}
+
+		generateVertices();
+		generateLandscape();
+		setTextureCoords();
+		generateNormals();
+
+		createTerrainVAO();
+		setTextures();
+
+		// Set up audio
+		engine = createIrrKlangDevice();
+
+		if (!engine)
+		{
+			cout << "[!] Error setting up irrKlang engine (Terrain.cpp)\n";
+		}
+
+		setSoundTree();
+	}
 
 	void getGrassModelPositions(vector<vec3>* positions);
 	void getOasisModelPositions(vector<vec3>* positions);
 	Biome offsetUserPos(vec3* pos);
 	bool isAtEdge(vec3 pos);
 
-	void setShaderPositions(vec3 lightPos, vec3 cameraPos);
-	void setShaderLightColour(vec3 colour);
-
-	void setMVP(MVP* mvp);
+	//void setShaderPositions(vec3 lightPos, vec3 cameraPos);
+	//void setShaderLightColour(vec3 colour);
+	//void setMVP(MVP* mvp);
 
 	const int getModelType(int idx);
 	const int getRotation(int idx);
@@ -76,7 +112,7 @@ private:
 
 	vec3 soundTreeModel;
 
-	Shader* shaders;
+	//Shader* shaders;
 
 	// Stores all vertices - triangles across the whole map, with 11 values for each triangle
 	// - 3 for vertices, 3 for colours, 3 for normals, 2 for textures

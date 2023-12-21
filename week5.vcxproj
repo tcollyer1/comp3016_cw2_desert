@@ -139,7 +139,9 @@
     <ClCompile Include="src\cpp\Light.cpp" />
     <ClCompile Include="src\cpp\main.cpp" />
     <ClCompile Include="src\cpp\Buffers.cpp" />
+    <ClCompile Include="src\cpp\ModelSet.cpp" />
     <ClCompile Include="src\cpp\MVP.cpp" />
+    <ClCompile Include="src\cpp\ShaderInterface.cpp" />
     <ClCompile Include="src\cpp\Terrain.cpp" />
     <ClCompile Include="src\cpp\Texture.cpp" />
     <ClCompile Include="stbImageLoader.cpp" />
@@ -150,7 +152,9 @@
     <ClInclude Include="src\h\Light.h" />
     <ClInclude Include="src\h\main.h" />
     <ClInclude Include="src\h\Buffers.h" />
+    <ClInclude Include="src\h\ModelSet.h" />
     <ClInclude Include="src\h\MVP.h" />
+    <ClInclude Include="src\h\ShaderInterface.h" />
     <ClInclude Include="src\h\Terrain.h" />
     <ClInclude Include="src\h\Texture.h" />
     <ClInclude Include="stb_image.h" />

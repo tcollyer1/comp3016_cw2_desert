@@ -26,6 +26,8 @@ public:
 
 	void resetModel();
 	void moveModel(vec3 position);
+	void scaleModel(vec3 scalingFactor);
+	void rotateModel(float degrees, vec3 rotationVec);
 
 	void updateView(vec3 eye, vec3 centre, vec3 up);
 

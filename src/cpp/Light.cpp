@@ -1,35 +1,6 @@
 #include "..\h\Light.h"
-#include "..\h\Terrain.h"
 
 #define LIGHT_ORBIT_OFFSET	8.0f;
-
-Light::Light()
-{
-	currSkyColour = day1;
-	lightColour = vec3(1.0f);
-	lightPos = vec3(MIDDLE_POS, MIDDLE_POS, -MIDDLE_POS);
-
-	createLightVAO();
-
-	shaders = new Shader("shaders/lightShader.vert", "shaders/lightShader.frag");
-
-	engine = createIrrKlangDevice();
-
-	if (!engine)
-	{
-		cout << "[!] Error setting up irrKlang engine (Light.cpp)\n";
-
-		engine	= NULL;
-		sound	= NULL;
-		sound2	= NULL;
-	}
-	else
-	{
-		sound = engine->play2D(daySound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
-		sound2 = engine->play2D(nightSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
-		sound2->setVolume(0.0f);
-	}
-}
 
 vec3 Light::getLightPosition()
 {
@@ -66,22 +37,6 @@ void Light::drawLight()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	lightVAO->unbind();
-}
-
-// Sends MVP data to the light shaders
-void Light::setMVP(MVP* mvp)
-{
-	shaders->use();
-	shaders->setMat4("model", mvp->getModel());
-	shaders->setMat4("view", mvp->getView());
-	shaders->setMat4("projection", mvp->getProjection());
-}
-
-// Sends the current light colour to the terrain shaders.
-void Light::setShaderLightColour(vec3 colour)
-{
-	shaders->use();
-	shaders->setVec3("lightColour", colour);
 }
 
 // Rotate the light around the scene & adjust the skybox colour based on the light's position
