@@ -39,11 +39,11 @@ The code is structured using an object-oriented approach and is divided up into 
 - irrKlang (audio)
 
 ### Models
-- [https://www.zapsplat.com](ZapSplat) (audio)
-- [https://www.turbosquid.com](TurboSquid) and [https://sketchfab.com](Sketchfab) (models)
-  - [https://www.turbosquid.com/3d-models/cordyline-indivisa-free-3d-model-2117614](Palm tree model)
-  - [https://sketchfab.com/3d-models/cactus-saguaro-d98fcb4869c6413f943fb127d60edb6e](Cactus model)
-  - [https://sketchfab.com/3d-models/grass-bushes-game-ready-asset-aa1fa43af9bf4228adfddb54ea123ad1](Grass model)
+- [ZapSplat](https://www.zapsplat.com) (audio)
+- [TurboSquid](https://www.turbosquid.com) and [Sketchfab](https://sketchfab.com) (models)
+  - [Palm tree model](https://www.turbosquid.com/3d-models/cordyline-indivisa-free-3d-model-2117614)
+  - [Cactus model](https://sketchfab.com/3d-models/cactus-saguaro-d98fcb4869c6413f943fb127d60edb6e)
+  - [Grass model](https://sketchfab.com/3d-models/grass-bushes-game-ready-asset-aa1fa43af9bf4228adfddb54ea123ad1)
 
 ## Key Features
 - Object-oriented design approach
