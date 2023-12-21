@@ -1,44 +1,136 @@
-
-
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "..\h\Terrain.h"
 
-// Perlin Noise
+// Noise - height maps, model placement
 #include "..\h\FastNoiseLite.h"
 
 #include <math.h>
 
 using namespace glm;
 
-#define GRASS_MODEL_BOUND 0.95f
-#define OASIS_MODEL_BOUND 0.99f
+// Defines the boundaries the noise values must exceed
+// for a model to be placed in the grass & oasis biomes
+#define GRASS_MODEL_BOUND	0.95f
+#define OASIS_MODEL_BOUND	0.99f
 
-Terrain::Terrain()
+Terrain::~Terrain()
 {
-	rowIndex			= 0;
-	colVerticesOffset	= drawStartPos;
-	rowVerticesOffset	= drawStartPos;
-	colIndicesOffset	= 0;
-	rowIndicesOffset	= 0;
-
-	for (int i = 0; i < MAP_SIZE; i++)
+	if (engine)
 	{
-		trees[i] = false;
+		engine->drop();
+	}
+	if (sound)
+	{
+		sound->stop();
+		sound->drop();
 	}
 
-	generateVertices();
-	generateLandscape();
-	setTextureCoords();
-	generateNormals();
+	free(sound);
+	free(engine);
+	free(terrainVAO);
+
+	glUseProgram(0);
+	free(shaders);
 }
 
-// Returns all of the vertex data for the terrain.
-VAO::VertexData* Terrain::getVertices()
+// Sets the tree that will have a 3D sound attached to it
+void Terrain::setSoundTree()
 {
-	return (terrainVertices);
+	int i = 0;
+	bool found = false;
+
+	// Search for a tree and use its position for the 3D sound
+	while (i < oasisModelPositions.size() && !found)
+	{
+		if (modelType[i])
+		{
+			soundTreeModel = vec3(oasisModelPositions[i]);
+			found = true;
+		}
+
+		i++;
+	}
+
+	if (engine)
+	{
+		sound = engine->play3D(treeSound.c_str(), vec3df(soundTreeModel.x, soundTreeModel.y, soundTreeModel.z), true, false, true);
+		sound->setMinDistance(2.0f);
+	}	
+}
+
+// Updates listener position, i.e. current camera position, for 3D sound effects
+void Terrain::updateListenerPosition(vec3 pos, vec3 front)
+{
+	if (engine)
+	{
+		engine->setListenerPosition(vec3df(pos.x, pos.y, pos.z), vec3df(front.x, front.y, front.z));
+	}	
+}
+
+// Draws the terrain data within the terrain VAO
+void Terrain::drawTerrain()
+{
+	for (int i = 0; i < textures.size(); i++)
+	{
+		textures[i]->bindTexture();
+	}
+
+	terrainVAO->bind();
+
+	glDrawElements(GL_TRIANGLES, MAP_SIZE * 32, GL_UNSIGNED_INT, 0);
+
+	terrainVAO->unbind();
+}
+
+// Sets up VAO for terrain data, including vertices, colours, normals
+// and textures
+void Terrain::createTerrainVAO()
+{
+	terrainVAO = new VAO();
+	terrainVAO->bind();
+
+	int verticesArrSize = sizeof(terrainVertices);
+	int indicesArrSize = sizeof(terrainIndices);
+
+	// Bind terrain vertices and indices to buffers
+	terrainVAO->addBuffer(terrainVertices, verticesArrSize, VAO::VERTICES);
+	terrainVAO->addBuffer(terrainIndices, indicesArrSize, VAO::INDICES);
+
+	terrainVAO->enableAttribArrays(BUF_VERTICES | BUF_COLOURS | BUF_NORMALS | BUF_TEXTURES);
+
+	terrainVAO->unbind();
+}
+
+// Generates and binds all the textures needed for the terrain.
+void Terrain::setTextures()
+{
+	for (int i = 0; i < NUM_TEXTURES; i++)
+	{
+		TerrainTexture* tex = new TerrainTexture(assetsFolder + TerrainTexture::texNames[i], (TerrainTexture::TerrainType)i, shaders);
+		tex->bindTexture();
+
+		textures.push_back(tex);
+	}
+}
+
+// Returns either 0 (grass model) or 1 (tree or cactus model, depending on the biome) 
+// to determine a randomised model at a given position.
+const int Terrain::getModelType(int idx)
+{
+	return (modelType[idx]);
+}
+
+// Retrieves a rotation value from a selection of randomly generated values to apply
+// to a given model.
+const int Terrain::getRotation(int idx)
+{
+	return (rotation[idx]);
+}
+
+// Retrieves a scaling factor (divisor) from a selection of randomly generated values
+// to apply to a given model.
+const int Terrain::getScale(int idx)
+{
+	return (scaling[idx]);
 }
 
 // Gets the biome type at a given point on the terrain given the relevant
@@ -47,7 +139,7 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 {
 	Biome biome = DESERT;
 
-	// Grassy biome. This is where plants and cacti will also appear.
+	// Grassy biome. This is where grass and cacti will also appear.
 	if (terrain >= 0.55f)
 	{
 		biome = GRASS;
@@ -66,7 +158,8 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 	}
 	// If the terrain is just above water biome level - allow the textures
 	// to mix between water/sand
-	// Trees will also appear here to flesh out this biome
+	// Trees will also appear here to surround the water and flesh out the
+	// oasis biome
 	else if (terrain > -0.35 && terrain <= -0.3)
 	{
 		biome = DESERT_OASIS;
@@ -90,29 +183,31 @@ Terrain::Biome Terrain::getBiome(float terrain, float path)
 // the biome and generated noise value
 bool Terrain::getIfModelPlacement(Biome biome, float noise)
 {
-	bool model = false;
+	bool placeModel = false;
 
 	switch (biome)
 	{
 	case GRASS:
 		if (noise > GRASS_MODEL_BOUND)
 		{
-			model = true;
+			placeModel = true;
 		}
 		break;
 	case DESERT_OASIS:
 		if (noise > OASIS_MODEL_BOUND)
 		{
-			model = true;
+			placeModel = true;
 		}
 		break;
 	default:
 		break;
 	}
 
-	return (model);
+	return (placeModel);
 }
 
+// Retrieves all of the established model positions for the grassy
+// biomes and copies them into the provided vector.
 void Terrain::getGrassModelPositions(vector<vec3>* positions)
 {
 	for (int i = 0; i < grassModelPositions.size(); i++)
@@ -121,17 +216,14 @@ void Terrain::getGrassModelPositions(vector<vec3>* positions)
 	}
 }
 
+// Retrieves all of the established model positions for the oasis
+// biomes and copies them into the provided vector.
 void Terrain::getOasisModelPositions(vector<vec3>* positions)
 {
 	for (int i = 0; i < oasisModelPositions.size(); i++)
 	{
 		positions->push_back(oasisModelPositions[i]);
 	}
-}
-
-ivec3* Terrain::getIndices()
-{
-	return (terrainIndices);
 }
 
 // Generate all of the vertices and indices for the terrain
@@ -231,7 +323,8 @@ void Terrain::generateLandscape()
 	int pSeed = rand() % 100;
 	pathNoise.SetSeed(pSeed);
 
-	// Perlin noise for model placement
+	// OpenSimplex noise for model placement - OS seems to give more "extreme" values closer together -
+	// when tested on terrain, there were considerably more hills and troughs, with less in between values.
 	FastNoiseLite modelNoise;
 	modelNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
 	modelNoise.SetFrequency(10.0f);
@@ -268,7 +361,7 @@ void Terrain::generateLandscape()
 
 			// Set random height value (random noise) calculated before,
 			// to the vertex y value. 
-			// Divide by the sum of the 3 amplitudes to maintain values between 0-1 (?)
+			// Divide by the sum of the 3 amplitudes to maintain values between 0-1
 			// Multiply by 2 for greater height diversity.
 			terrainVertices[terrainIndex].vertices.y = (terrainVal / (1 + 0.5 + 0.25)) * 2;
 
@@ -361,6 +454,8 @@ void Terrain::setTextureCoords()
 
 	int z = 0;
 
+	// Scale 2D texture coordinates across the terrain between 0.0 and 1.0.
+	// Treat the terrain as one large quad
 	for (int x = 0; x < MAP_SIZE; x++)
 	{
 		div_t divResultX;
@@ -378,6 +473,7 @@ void Terrain::setTextureCoords()
 			terrainVertices[x].textures.y = (float)divResultZ.rem / RENDER_DIST;
 		}
 
+		// Move onward a row when at the end
 		if (divResultX.rem == RENDER_DIST - 1)
 		{
 			z++;
@@ -396,6 +492,8 @@ void Terrain::generateNormals()
 		// If not at the right edge
 		if (divResult.rem != RENDER_DIST - 1)
 		{
+			// Splits each coordinate into being part of a quad - 
+			// uses neighbouring vertices
 			vec3 topLeft = vec3(terrainVertices[i].vertices);
 			vec3 topRight = vec3(terrainVertices[i + 1].vertices);
 
@@ -437,4 +535,81 @@ void Terrain::generateNormals()
 		terrainVertices[i].normals.y /= (float)normalsCalc[i];
 		terrainVertices[i].normals.z /= (float)normalsCalc[i];
 	}
+}
+
+// Determines if a given position is at the boundary of the terrain.
+// Used to ensure the user cannot walk off the map
+bool Terrain::isAtEdge(vec3 pos)
+{
+	bool atEdge = false;
+	vec3 terrainCoords;
+
+	terrainCoords.x = pos.x - TERRAIN_START.x;
+	terrainCoords.z = pos.z - TERRAIN_START.z;
+
+	if (terrainCoords.x < terrainVertices[BTM_LEFT].vertices.x
+		|| terrainCoords.x > terrainVertices[BTM_RIGHT].vertices.x
+		|| terrainCoords.z < terrainVertices[TOP_LEFT].vertices.z
+		|| terrainCoords.z > terrainVertices[BTM_LEFT].vertices.z)
+	{
+		atEdge = true;
+	}
+
+	return (atEdge);
+}
+
+// Returns the current biome at a given position (for audio purposes), 
+// as well as updating the given camera position's y coordinate with 
+// the y coordinate of the terrain at this x/z position.
+Terrain::Biome Terrain::offsetUserPos(vec3* pos)
+{
+	vec3 terrainCoords;
+	vec4 biomeColours;
+
+	Biome b;
+
+	// Terrain coordinates are the global camera coordinates, minus
+	// the terrain start values
+	terrainCoords.x = pos->x - TERRAIN_START.x;
+	terrainCoords.y = pos->y - TERRAIN_START.y;
+	terrainCoords.z = pos->z - TERRAIN_START.z;
+
+	bool found = false;
+	int i = 0;
+
+	// Get up vector at this terrain vertice
+	while (i < MAP_SIZE - 1 && !found)
+	{
+		if ((terrainVertices[i].vertices.x == terrainCoords.x || (terrainCoords.x < terrainVertices[i].vertices.x + VERTICE_OFFSET && terrainCoords.x > terrainVertices[i].vertices.x - VERTICE_OFFSET))
+			&& (terrainVertices[i].vertices.z == terrainCoords.z || (terrainCoords.z < terrainVertices[i].vertices.z + VERTICE_OFFSET && terrainCoords.z > terrainVertices[i].vertices.z - VERTICE_OFFSET)))
+		{
+			terrainCoords.y = terrainVertices[i].vertices.y;
+			biomeColours = terrainVertices[i].colours;
+
+			found = true;
+		}
+
+		i++;
+	}
+
+	// Uses terrain colour map to determine biome.
+	// - Grass-desert transition is considered grass
+	// - Desert path is considered desert
+	// - Desert-oasis transition is considered oasis
+	if (biomeColours.r == 1.0f || biomeColours.a == 1.0f)
+	{
+		b = DESERT;
+	}
+	else if (biomeColours.g == 1.0f)
+	{
+		b = GRASS;
+	}
+	else
+	{
+		b = OASIS;
+	}
+
+	pos->y = terrainCoords.y;
+
+	return (b);
 }

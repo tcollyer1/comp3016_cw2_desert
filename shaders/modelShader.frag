@@ -15,7 +15,7 @@ uniform vec3 viewPos;
 
 void main()
 {
-vec3 norm = normalize(Normal);
+	vec3 norm = normalize(Normal);
 	vec3 lightDir = normalize(lightPos - FragPos);
 
 	// AMBIENT
@@ -31,18 +31,13 @@ vec3 norm = normalize(Normal);
 	vec3 viewDir = normalize(viewPos - FragPos);
 
 	vec3 halfwayDir = normalize(lightDir + viewDir);
-	//vec3 reflectionDir = reflect(-lightDir, norm); // reflect() expects from light source -> model pos, but we have it the other way so reverse it
 
-	//float specCalc = pow(max(dot(viewDir, reflectionDir), 0.0f), 32); // 32 -> shininess value
 	float specCalc = pow(max(dot(norm, halfwayDir), 0.0f), 32); // 32 -> shininess value
-	//vec3 specular = specularStrength * specCalc * lightColour;
 	vec3 specular = specularStrength * specCalc * lightColour;
 
-
+	// Calculate the resulting colour to apply
 	vec3 resultColour = (ambient + diffuse + specular) * objColour;
 
-	// Apply colour
-	//FragColor = vec4(colourFrag, 1.0f) * vec4(resultColour, 1.0f);
+	// Apply colour - texture multiplied by lighting effect
 	FragColor = texture(texture_diffuse1, TexturesFrag) * vec4(resultColour, 1.0f);
-	//FragColor = totalColour * vec4(resultColour, 1.0f);
 }

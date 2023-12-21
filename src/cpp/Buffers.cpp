@@ -24,6 +24,7 @@ VAO::~VAO()
 	unbind();
 }
 
+// Gets the size of each coordinate (x2, x3 etc.) for a given type of buffer.
 int VAO::getCoordSize(BufferType type)
 {
 	int sz = 0;
@@ -47,6 +48,7 @@ int VAO::getCoordSize(BufferType type)
 	return (sz);
 }
 
+// Creates a new vertex or index buffer object.
 void VAO::addBuffer(const void* pData, int size, BufferType type)
 {
 	switch (type)
@@ -63,23 +65,33 @@ void VAO::addBuffer(const void* pData, int size, BufferType type)
 	}	
 }
 
-void VAO::enableAttribArrays()
+// Enables requested vertex arrays from the following: BUF_VERTICES | BUF_NORMALS | BUF_TEXTURES | BUF_COLOURS
+void VAO::enableAttribArrays(int data)
 {
-	// Vertices
-	glVertexAttribPointer(VERTICES, getCoordSize(VERTICES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, vertices));
-	glEnableVertexAttribArray(VERTICES);
-
-	// Normals
-	glVertexAttribPointer(NORMALS, getCoordSize(NORMALS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, normals));
-	glEnableVertexAttribArray(NORMALS);
-
-	// Textures
-	glVertexAttribPointer(TEXTURES, getCoordSize(TEXTURES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, textures));
-	glEnableVertexAttribArray(TEXTURES);
-
-	// Colours
-	glVertexAttribPointer(COLOURS, getCoordSize(COLOURS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, colours));
-	glEnableVertexAttribArray(COLOURS);
+	if (data & BUF_VERTICES)
+	{
+		// Vertices
+		glVertexAttribPointer(VERTICES, getCoordSize(VERTICES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, vertices));
+		glEnableVertexAttribArray(VERTICES);
+	}
+	if (data & BUF_NORMALS)
+	{
+		// Normals
+		glVertexAttribPointer(NORMALS, getCoordSize(NORMALS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, normals));
+		glEnableVertexAttribArray(NORMALS);
+	}
+	if (data & BUF_TEXTURES)
+	{
+		// Textures
+		glVertexAttribPointer(TEXTURES, getCoordSize(TEXTURES), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, textures));
+		glEnableVertexAttribArray(TEXTURES);
+	}
+	if (data & BUF_COLOURS)
+	{
+		// Colours
+		glVertexAttribPointer(COLOURS, getCoordSize(COLOURS), GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, colours));
+		glEnableVertexAttribArray(COLOURS);
+	}
 }
 
 void VAO::bind()
@@ -90,31 +102,8 @@ void VAO::bind()
 
 void VAO::unbind()
 {
+	// Unbind VAO
 	glBindVertexArray(0);
-}
-
-GLuint VAO::getVBOId()
-{
-	GLuint id = 0;
-
-	if (verticesBuffer != NULL)
-	{
-		id = verticesBuffer->bufferId;
-	}
-
-	return (id);
-}
-
-GLuint VAO::getIBOId()
-{
-	GLuint id = 0;
-
-	if (indicesBuffer != NULL)
-	{
-		id = indicesBuffer->bufferId;
-	}
-
-	return (id);
 }
 
 VBO::VBO(const void* pData, int size)
@@ -127,6 +116,11 @@ VBO::VBO(const void* pData, int size)
 
 	// Allocate buffer memory for the vertices.
 	glBufferData(GL_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW);
+}
+
+VBO::~VBO()
+{
+	unbind();
 }
 
 void VBO::bind()
@@ -149,7 +143,7 @@ IBO::IBO(const void* pData, int size)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, pData, GL_STATIC_DRAW);
 }
 
-int IBO::getCount()
+IBO::~IBO()
 {
-	return (idxCount);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

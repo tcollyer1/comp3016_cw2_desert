@@ -1,7 +1,7 @@
 #include "..\h\Display.h"
 
-#define WINDOW_WIDTH		glfwGetVideoMode(glfwGetPrimaryMonitor())->width - 100//1280
-#define WINDOW_HEIGHT		glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 100//720
+#define WINDOW_WIDTH		glfwGetVideoMode(glfwGetPrimaryMonitor())->width - 100
+#define WINDOW_HEIGHT		glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 100
 
 Display::Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*frameBuffSizeCallback)(GLFWwindow*, int, int))
 {
@@ -40,15 +40,13 @@ Display::Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*fram
 	// 0, 0 indicates the position of the window
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-	// Enables "depth" in textures - stops lack of depth in 3D objects when
-	// texturing & strange warping
+	// Enables "depth" in textures
 	glEnable(GL_DEPTH_TEST);
 
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	glEnable(GL_BLEND); // Enable blending
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Assigns frameBufferSizeCallback() as the callback function to dynamically handle 
+	// Assigns frameBuffSizeCallback as the callback function to dynamically handle 
 	// window resizing.
 	glfwSetFramebufferSizeCallback(window, frameBuffSizeCallback);
 
@@ -56,11 +54,19 @@ Display::Display(void (*mouseCallback)(GLFWwindow*, double, double), void (*fram
 	glfwSetCursorPosCallback(window, mouseCallback);
 }
 
+Display::~Display()
+{
+	free(window);
+	glfwTerminate();
+}
+
+// Returns the current created GLFW window.
 GLFWwindow* Display::getWindow()
 {
 	return (window);
 }
 
+// Returns true if errors were encountered during window creation.
 bool Display::checkErrors()
 {
 	return (error);

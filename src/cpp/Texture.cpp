@@ -1,7 +1,9 @@
 #include "..\h\Texture.h"
 
-// Textures - header must be in C:/Users/Public/OpenGL/include
-#include "stb_image.h"
+// Textures - header must be in C:/Users/Public/OpenGL/include (LearnOpenGL shader/model loading headers expect them in the same location)
+#include <stb_image.h>
+
+const string TerrainTexture::texNames[NUM_TEXTURES] = { "sand.jpg", "grass.jpg", "water.jpg", "sandPath.jpg" };
 
 TerrainTexture::TerrainTexture(string path, TerrainType type, Shader* terrainShader)
 {

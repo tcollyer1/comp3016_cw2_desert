@@ -9,6 +9,11 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#define BUF_VERTICES	1
+#define BUF_NORMALS		2
+#define BUF_TEXTURES	4
+#define BUF_COLOURS		8
+
 using namespace glm;
 
 
@@ -23,6 +28,7 @@ protected:
 	GLuint bufferId;
 
 	VBO(const void* pData, int size);
+	~VBO();
 
 	void bind();
 	void unbind();
@@ -35,15 +41,10 @@ class IBO
 {
 private:
 	GLuint bufferId;
-	int idxCount;
 
 protected:
 	IBO(const void* pData, int size);
-
-	void bind();
-	void unbind();
-
-	int getCount();
+	~IBO();
 
 	friend VAO;
 };
@@ -52,6 +53,7 @@ protected:
 class VAO
 {
 public:
+	// Structure that stores all data for a given vertex
 	struct VertexData
 	{
 		vec3 vertices;
@@ -60,6 +62,7 @@ public:
 		vec2 textures;
 	};
 
+	// Indicates the type of data a buffer will store
 	enum BufferType { VERTICES, NORMALS, TEXTURES, COLOURS, NUM_ATTRIBS, INDICES };
 
 	VAO();
@@ -68,10 +71,7 @@ public:
 	void bind();
 	void unbind();
 
-	void enableAttribArrays();
-
-	GLuint getVBOId();
-	GLuint getIBOId();
+	void enableAttribArrays(int data);
 
 	void addBuffer(const void* pData, int size, BufferType type);
 

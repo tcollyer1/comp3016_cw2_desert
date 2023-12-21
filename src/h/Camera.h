@@ -1,39 +1,58 @@
-//GLM
-#include "glm/ext/vector_float3.hpp"
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#ifndef CAMERA_H
 
-#include <GLFW/glfw3.h>
+#define CAMERA_H
+
+#include "Terrain.h"
+
+// Offset from the actual height of the terrain so the user is not "crawling"
+// along the floor in walking mode
+#define USER_HEIGHT 1.0f
+
+// irrKlang - audio
+#include <irrKlang/irrKlang.h>
 
 using namespace std;
 using namespace glm;
+using namespace irrklang;
 
 class Camera
 {
 public:
-	//typedef void (Camera::*mouseFunc)(GLFWwindow*, double, double);
-
 	struct CameraInfo
 	{
 		// Position of the camera in world space
 		vec3 cameraPos;
 
-		// Travel direction - forward, since we've set it to negative on Z axis, which usually
-		// points towards you
+		// Travel direction
 		vec3 cameraFront;
 
 		// Absolute up direction
 		vec3 cameraUp;
 	};
 
-	Camera();
+	Camera(Terrain* t);
+	~Camera();
+
 	CameraInfo getCameraInfo();
 
 	void mouseCallback(GLFWwindow* pW, double x, double y);
 	void processUserInput(GLFWwindow* pW, float deltaTime);
 
 private:
+	enum CameraMode { FLY, WALK };
+
 	CameraInfo camInfo;
+	CameraMode mode;
+	Terrain* terrain;
+
+	ISoundEngine* engine;
+	ISound* sound;
+	ISound* sound2;
+	ISound* sound3;
+
+	const string sandSound = "media/audio/sandStep.mp3";
+	const string grassSound = "media/audio/grassStep.mp3";
+	const string waterSound = "media/audio/waterStep.mp3";
 
 	// If it's the first time the mouse is entering the window, this determines whether to set
 	// default last x/y positions or not.
@@ -48,4 +67,9 @@ private:
 
 	// Vertical rotation
 	float cameraPitch;
+
+	void toggleFly();
+	void toggleWalk();
 };
+
+#endif

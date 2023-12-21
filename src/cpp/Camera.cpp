@@ -1,8 +1,11 @@
 #include "..\h\Camera.h"
 
-Camera::Camera()
+Camera::Camera(Terrain* t)
 {
-	camInfo.cameraPos	= vec3(0.0f, 0.0f, 3.0f);
+	// Set user (camera) position to start of the terrain
+	// + VERTICE_OFFSET for x/z so not directly at the edge
+	// + USER_HEIGHT for y so the user is not crawling or clipping through the ground
+	camInfo.cameraPos	= vec3(TERRAIN_START.x + VERTICE_OFFSET, TERRAIN_START.y + USER_HEIGHT, TERRAIN_START.z + VERTICE_OFFSET);
 	camInfo.cameraFront = vec3(0.0f, 0.0f, -1.0f);
 	camInfo.cameraUp	= vec3(0.0f, 1.0f, 0.0f);
 
@@ -14,8 +17,54 @@ Camera::Camera()
 
 	cameraLastXPos		= 0.0f;
 	cameraLastYPos		= 0.0f;
+
+	terrain				= t;	// Give the camera access to the terrain so it can be used to adjust
+								// positioning, e.g. when walking across the terrain
+
+	mode				= WALK; // Walk mode by default
+
+	// Set up audio
+	engine	= createIrrKlangDevice();
+	sound	= NULL;
+	sound2	= NULL;
+	sound3	= NULL;
+
+	if (!engine)
+	{
+		cout << "[!] Error setting up irrKlang engine (Camera.cpp)\n";
+	}
 }
 
+Camera::~Camera()
+{
+	if (engine)
+	{
+		engine->drop();
+	}
+	if (sound)
+	{
+		sound->stop();
+		sound->drop();
+	}
+	if (sound2)
+	{
+		sound2->stop();
+		sound2->drop();
+	}
+	if (sound3)
+	{
+		sound3->stop();
+		sound3->drop();
+	}
+
+	free(sound);
+	free(sound2);
+	free(sound3);
+	free(engine);
+	free(terrain);
+}
+
+// Returns position information about the camera
 Camera::CameraInfo Camera::getCameraInfo()
 {
 	return (camInfo);
@@ -75,6 +124,26 @@ void Camera::mouseCallback(GLFWwindow* pW, double x, double y)
 // camera position and direction, this is in the Camera class
 void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 {
+	vec3 actualPos = camInfo.cameraPos;
+	vec3 actualFront = camInfo.cameraFront;
+
+	vec3 proposedPos = camInfo.cameraPos;
+
+	static	Terrain::Biome lastBiome	= Terrain::GRASS_DESERT;
+			Terrain::Biome biome		= Terrain::DESERT;
+
+	// Update the terrain with the current camera position for 3D audio
+	// front * -1 as audio panning appears reversed otherwise
+	terrain->updateListenerPosition(actualPos, actualFront * -1.0f);
+
+	// Don't move up or down when walking
+	actualFront.y = 0.0f;
+
+	bool atEdge = false;
+
+	static bool origKeyPress = false;
+	bool keyPress = false;
+
 	// Allows user to press escape to close the window
 	if (glfwGetKey(pW, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -84,39 +153,224 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// Calculates movement speed based on time
 	float moveSpeed = 3.0f * deltaTime;
 
-	// Shift - run
+	// Shift - move faster
 	if (glfwGetKey(pW, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		moveSpeed *= 4;
+		moveSpeed *= 2;
+	}
+
+	// Toggle fly/walk modes
+	if (glfwGetKey(pW, GLFW_KEY_V) == GLFW_PRESS)
+	{
+		toggleFly();
+	}
+	if (glfwGetKey(pW, GLFW_KEY_B) == GLFW_PRESS)
+	{
+		toggleWalk();
 	}
 
 	// W - forward
 	if (glfwGetKey(pW, GLFW_KEY_W) == GLFW_PRESS)
 	{
-		camInfo.cameraPos += moveSpeed * camInfo.cameraFront;
+		if (mode == WALK)
+		{
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
+
+			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
+			proposedPos += moveSpeed * actualFront;
+
+			if (!terrain->isAtEdge(proposedPos))
+			{
+				camInfo.cameraPos = proposedPos;
+			}
+		}
+
+		else
+		{
+			camInfo.cameraPos += moveSpeed * camInfo.cameraFront;
+		}
 	}
 
 	// S - backward
 	if (glfwGetKey(pW, GLFW_KEY_S) == GLFW_PRESS)
 	{
-		camInfo.cameraPos -= moveSpeed * camInfo.cameraFront;
+		if (mode == WALK)
+		{
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
+
+			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
+			proposedPos -= moveSpeed * actualFront;
+
+			if (!terrain->isAtEdge(proposedPos))
+			{
+				camInfo.cameraPos = proposedPos;
+			}
+		}
+
+		else
+		{
+			camInfo.cameraPos -= moveSpeed * camInfo.cameraFront;
+		}
 	}
 
 	// D - right
 	if (glfwGetKey(pW, GLFW_KEY_D) == GLFW_PRESS)
 	{
-		// Uses cross product using camera front position (-1 on z axis)
-		// and camera global up position (currently 1 on y axis) to get
-		// the sizeways (x) vector, hence left/right movement.
-		//
-		// The cross product basically takes any two vectors in a 3D space 
-		// and returns what the third vector is.
-		camInfo.cameraPos += normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+		// Uses cross product using camera front position and camera global 
+		// up position to get the sizeways (x) vector, hence left/right movement.
+
+		if (mode == WALK)
+		{
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
+
+			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
+			//camInfo.cameraPos += normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+			proposedPos += normalize(cross(actualFront, camInfo.cameraUp)) * moveSpeed;
+
+			if (!terrain->isAtEdge(proposedPos))
+			{
+				camInfo.cameraPos = proposedPos;
+			}
+		}
+
+		else
+		{
+			camInfo.cameraPos += normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+		}
 	}
 
 	// A - left
 	if (glfwGetKey(pW, GLFW_KEY_A) == GLFW_PRESS)
 	{
-		camInfo.cameraPos -= normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+
+		if (mode == WALK)
+		{
+			keyPress = true;
+
+			biome = terrain->offsetUserPos(&actualPos);
+
+			proposedPos.y = TERRAIN_START.y + USER_HEIGHT + actualPos.y;
+			proposedPos -= normalize(cross(actualFront, camInfo.cameraUp)) * moveSpeed;
+
+			if (!terrain->isAtEdge(proposedPos))
+			{
+				camInfo.cameraPos = proposedPos;
+			}
+		}
+
+		else
+		{
+			camInfo.cameraPos -= normalize(cross(camInfo.cameraFront, camInfo.cameraUp)) * moveSpeed;
+		}
 	}
+
+	// Only handle sound if engine is not NULL
+	if (engine)
+	{
+		// Handle movement sound effects
+		if (keyPress && (!origKeyPress || biome != lastBiome))
+		{
+			origKeyPress = true;
+
+			lastBiome = biome;
+
+			switch (biome)
+			{
+			case Terrain::DESERT:
+				if (sound2 != NULL)
+				{
+					sound2->stop();
+					sound2->drop();
+					sound2 = NULL;
+				}
+				if (sound3 != NULL)
+				{
+					sound3->stop();
+					sound3->drop();
+					sound3 = NULL;
+				}
+				sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
+			case Terrain::GRASS:
+				if (sound != NULL)
+				{
+					sound->stop();
+					sound->drop();
+					sound = NULL;
+				}
+				if (sound3 != NULL)
+				{
+					sound3->stop();
+					sound3->drop();
+					sound3 = NULL;
+				}
+				sound2 = engine->play2D(grassSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
+			default: // Water (oasis)
+				if (sound != NULL)
+				{
+					sound->stop();
+					sound->drop();
+					sound = NULL;
+				}
+				if (sound2 != NULL)
+				{
+					sound2->stop();
+					sound2->drop();
+					sound2 = NULL;
+				}
+				sound3 = engine->play2D(waterSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
+			}
+		}
+
+		if (!keyPress)
+		{
+			origKeyPress = false;
+
+			if (sound != NULL)
+			{
+				sound->stop();
+				sound->drop();
+				sound = NULL;
+			}
+			if (sound2 != NULL)
+			{
+				sound2->stop();
+				sound2->drop();
+				sound2 = NULL;
+			}
+			if (sound3 != NULL)
+			{
+				sound3->stop();
+				sound3->drop();
+				sound3 = NULL;
+			}
+		}
+	}	
+}
+
+// Set the camera to fly (free movement) mode.
+void Camera::toggleFly()
+{
+	mode = FLY;
+}
+
+// Set the camera to walk (restricted to walking on the terrain only)
+// mode.
+void Camera::toggleWalk()
+{
+	if (mode != WALK)
+	{
+		// Reset camera pos to start of terrain
+		camInfo.cameraPos = vec3(TERRAIN_START.x + VERTICE_OFFSET, TERRAIN_START.y + USER_HEIGHT, TERRAIN_START.z + VERTICE_OFFSET);
+	}
+
+	mode = WALK;
 }
