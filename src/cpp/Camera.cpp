@@ -28,7 +28,7 @@ Camera::Camera(Terrain* t)
 
 	if (!engine)
 	{
-		cout << "\n[!] Error setting up irrKlang engine\n";
+		cout << "[!] Error setting up irrKlang engine (Camera.cpp)\n";
 	}
 }
 
@@ -237,86 +237,89 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 		}
 	}
 
-	// Handle movement sound effects
-	if (keyPress && (!origKeyPress || biome != lastBiome))
+	if (engine)
 	{
-		origKeyPress = true;
-
-		lastBiome = biome;
-
-		switch (biome)
+		// Handle movement sound effects
+		if (keyPress && (!origKeyPress || biome != lastBiome))
 		{
-		case Terrain::DESERT:
-			if (sound2 != NULL) 
-			{ 
-				sound2->stop(); 
-				sound2->drop(); 
-				sound2 = NULL;
+			origKeyPress = true;
+
+			lastBiome = biome;
+
+			switch (biome)
+			{
+			case Terrain::DESERT:
+				if (sound2 != NULL)
+				{
+					sound2->stop();
+					sound2->drop();
+					sound2 = NULL;
+				}
+				if (sound3 != NULL)
+				{
+					sound3->stop();
+					sound3->drop();
+					sound3 = NULL;
+				}
+				sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
+			case Terrain::GRASS:
+				if (sound != NULL)
+				{
+					sound->stop();
+					sound->drop();
+					sound = NULL;
+				}
+				if (sound3 != NULL)
+				{
+					sound3->stop();
+					sound3->drop();
+					sound3 = NULL;
+				}
+				sound2 = engine->play2D(grassSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
+			default: // Water (oasis)
+				if (sound != NULL)
+				{
+					sound->stop();
+					sound->drop();
+					sound = NULL;
+				}
+				if (sound2 != NULL)
+				{
+					sound2->stop();
+					sound2->drop();
+					sound2 = NULL;
+				}
+				sound3 = engine->play2D(waterSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				break;
 			}
-			if (sound3 != NULL) 
-			{ 
-				sound3->stop(); 
-				sound3->drop();
-				sound3 = NULL;
-			}
-			sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
-			break;
-		case Terrain::GRASS:
-			if (sound != NULL) 
-			{ 
+		}
+
+		if (!keyPress)
+		{
+			origKeyPress = false;
+
+			if (sound != NULL)
+			{
 				sound->stop();
 				sound->drop();
 				sound = NULL;
 			}
-			if (sound3 != NULL) 
-			{ 
-				sound3->stop(); 
-				sound3->drop(); 
-				sound3 = NULL;
-			}
-			sound2 = engine->play2D(grassSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
-			break;
-		default: // Water (oasis)
-			if (sound != NULL) 
-			{ 
-				sound->stop(); 
-				sound->drop();
-				sound = NULL;
-			}
-			if (sound2 != NULL) 
-			{ 
+			if (sound2 != NULL)
+			{
 				sound2->stop();
-				sound2->drop(); 
+				sound2->drop();
 				sound2 = NULL;
 			}
-			sound3 = engine->play2D(waterSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
-			break;
+			if (sound3 != NULL)
+			{
+				sound3->stop();
+				sound3->drop();
+				sound3 = NULL;
+			}
 		}
-	}
-
-	if (!keyPress)
-	{
-		origKeyPress = false;
-
-		if (sound != NULL) 
-		{ 
-			sound->stop();
-			sound->drop();
-			sound = NULL;
-		}
-		if (sound2 != NULL) 
-		{ 
-			sound2->stop();
-			sound2->drop();
-			sound2 = NULL;
-		}
-		if (sound3 != NULL) 
-		{ 
-			sound3->stop();
-			sound3->drop();
-			sound3 = NULL;
-		}
-	}
+	}	
 }
 
 void Camera::toggleFly()

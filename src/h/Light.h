@@ -3,6 +3,7 @@
 #define LIGHT_H
 
 #include "Buffers.h"
+#include "MVP.h"
 
 //GLM
 #include "glm/ext/vector_float3.hpp"
@@ -11,6 +12,8 @@
 
 // Audio
 #include <irrKlang/irrKlang.h>
+
+#include <learnopengl/shader_m.h>
 
 #include <string>
 
@@ -39,6 +42,9 @@ public:
 
 	void createLightVAO();
 	void drawLight();
+
+	void setMVP(MVP* mvp);
+	void setShaderLightColour(vec3 colour);
 private:
 
 	VAO* lightVAO;
@@ -49,6 +55,8 @@ private:
 	ISoundEngine* engine;
 	ISound* sound;
 	ISound* sound2;
+
+	Shader* shaders;
 
 	const string daySound = "media/audio/ambience.mp3";
 	const string nightSound = "media/audio/ambience2.mp3";

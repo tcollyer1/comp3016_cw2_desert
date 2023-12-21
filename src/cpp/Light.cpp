@@ -11,11 +11,13 @@ Light::Light()
 
 	createLightVAO();
 
+	shaders = new Shader("shaders/lightShader.vert", "shaders/lightShader.frag");
+
 	engine = createIrrKlangDevice();
 
 	if (!engine)
 	{
-		cout << "\nError setting up irrKlang engine\n";
+		cout << "[!] Error setting up irrKlang engine (Light.cpp)\n";
 
 		engine	= NULL;
 		sound	= NULL;
@@ -64,6 +66,22 @@ void Light::drawLight()
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	lightVAO->unbind();
+}
+
+// Sends MVP data to the light shaders
+void Light::setMVP(MVP* mvp)
+{
+	shaders->use();
+	shaders->setMat4("model", mvp->getModel());
+	shaders->setMat4("view", mvp->getView());
+	shaders->setMat4("projection", mvp->getProjection());
+}
+
+// Sends the current light colour to the terrain shaders.
+void Light::setShaderLightColour(vec3 colour)
+{
+	shaders->use();
+	shaders->setVec3("lightColour", colour);
 }
 
 // Rotate the light around the scene & adjust the skybox colour based on the light's position

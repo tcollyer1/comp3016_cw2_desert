@@ -3,7 +3,7 @@
 
 #include "..\h\Terrain.h"
 
-// Perlin Noise
+// Noise - height maps, model placement
 #include "..\h\FastNoiseLite.h"
 
 #include <math.h>
@@ -24,7 +24,7 @@ Terrain::Terrain()
 	rowIndicesOffset	= 0;
 
 	// Generate random model rotations, scaling factors and randomise between
-	// tree/grass or cactus/grass on grassy and oasis biomes
+	// tree/grass or cactus/grass models on grassy and oasis biomes
 	for (int i = 0; i < MAP_SIZE; i++)
 	{
 		modelType[i] = rand() % 2;
@@ -45,7 +45,7 @@ Terrain::Terrain()
 
 	if (!engine)
 	{
-		cout << "\n[!] Error setting up irrKlang engine\n";
+		cout << "[!] Error setting up irrKlang engine (Terrain.cpp)\n";
 	}
 
 	setSoundTree();
@@ -57,33 +57,44 @@ void Terrain::setSoundTree()
 	int i = 0;
 	bool found = false;
 
+	// Search for a tree and use its position for the 3D sound
 	while (i < oasisModelPositions.size() && !found)
 	{
 		if (modelType[i])
 		{
-			soundTree = vec3(oasisModelPositions[i]);
+			soundTreeModel = vec3(oasisModelPositions[i]);
 			found = true;
 		}
 
 		i++;
 	}
 
-	sound = engine->play3D(treeSound.c_str(), vec3df(soundTree.x, soundTree.y, soundTree.z), true, false, true);
-	sound->setMinDistance(2.0f);
+	if (engine)
+	{
+		sound = engine->play3D(treeSound.c_str(), vec3df(soundTreeModel.x, soundTreeModel.y, soundTreeModel.z), true, false, true);
+		sound->setMinDistance(2.0f);
+	}	
 }
 
+// Updates listener position, i.e. current camera position, for 3D sound effects
 void Terrain::updateListenerPosition(vec3 pos, vec3 front)
 {
-	engine->setListenerPosition(vec3df(pos.x, pos.y, pos.z), vec3df(front.x, front.y, front.z));
+	if (engine)
+	{
+		engine->setListenerPosition(vec3df(pos.x, pos.y, pos.z), vec3df(front.x, front.y, front.z));
+	}	
 }
 
+// Sends MVP data to the terrain shaders
 void Terrain::setMVP(MVP* mvp)
 {
+	shaders->use();
 	shaders->setMat4("model", mvp->getModel());
 	shaders->setMat4("view", mvp->getView());
 	shaders->setMat4("projection", mvp->getProjection());
 }
 
+// Draws the terrain data within the terrain VAO
 void Terrain::drawTerrain()
 {
 	for (int i = 0; i < textures.size(); i++)
@@ -98,6 +109,8 @@ void Terrain::drawTerrain()
 	terrainVAO->unbind();
 }
 
+// Sets up VAO for terrain data, including vertices, colours, normals
+// and textures
 void Terrain::createTerrainVAO()
 {
 	terrainVAO = new VAO();
@@ -138,6 +151,7 @@ void Terrain::setShaderPositions(vec3 lightPos, vec3 cameraPos)
 // Sends the current light colour to the terrain shaders.
 void Terrain::setShaderLightColour(vec3 colour)
 {
+	shaders->use();
 	shaders->setVec3("lightColour", colour);
 }
 

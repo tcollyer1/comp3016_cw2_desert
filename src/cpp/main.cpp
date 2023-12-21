@@ -29,8 +29,6 @@
 #define CACTUS_MAX 0.005f
 #define GRASS_MAX 0.01f
 
-//const string sandWalk = "media/audio/sandStep.mp3";
-
 using namespace std;
 using namespace glm;
 using namespace irrklang;
@@ -76,15 +74,12 @@ int main()
 	}
 
 	// Set shaders & model
-	//Shader terrainShaders("shaders/terrainShader.vert", "shaders/terrainShader.frag");
-	Shader lightShaders("shaders/lightShader.vert", "shaders/lightShader.frag");
 	Shader modelShaders("shaders/modelShader.vert", "shaders/modelShader.frag");
 
 	Model shrub("media/grass/scene.gltf");
 	Model palmTree("media/palmTree/CordylineFREE.obj");
 	Model cactus("media/cactus/scene.gltf");
 
-	//Terrain* terrain = new Terrain(&terrainShaders);
 	Terrain* terrain = new Terrain();
 	camera = new Camera(terrain);
 	Light* light = new Light();
@@ -109,7 +104,7 @@ int main()
 	MVP* mvp = new MVP(); // Create MVP matrix
 
 	// This is the render loop.
-	// until the 'X' is clicked on the window or Esc is hit.
+	// Runs until Esc is hit.
 
 	while (!glfwWindowShouldClose(d->getWindow()))
 	{
@@ -122,9 +117,6 @@ int main()
 
 		// Set current camera/light position for specular lighting
 		terrain->setShaderPositions(light->getLightPosition(), camera->getCameraInfo().cameraPos);
-		//terrainShaders.use();
-		//terrainShaders.setVec3("lightPos", light->getLightPosition());
-		//terrainShaders.setVec3("viewPos", camera->getCameraInfo().cameraPos);
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -135,8 +127,8 @@ int main()
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Render *** //
 		// -------------- //
+		
 		// The colour to be displayed on the cleared window (RGBA)
-
 		glClearColor(light->getSkyColour().r, light->getSkyColour().g, light->getSkyColour().b, 1.0f);
 
 		// Clears the colour buffer
@@ -145,11 +137,10 @@ int main()
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Transform *** //
 		// ----------------- //
+		
 		// Dynamic transformations must be done in the rendering loop for constant updates.
 
-		/*** (Model-view-projection) ***/
-
-		// Set our view for the MVP here.
+		// Set our view/projection for the MVP here.
 		// Initialise the view & relative positioning.
 		camInfo = camera->getCameraInfo();
 
@@ -157,25 +148,15 @@ int main()
 
 		mvp->setProjection();
 
-		// Create matrix, same as transform before
-		//model = mat4(1.0f);
+		// Set up model
 		mvp->resetModel();
-
-		//model = translate(model, TERRAIN_START);
 		mvp->moveModel(TERRAIN_START);
 
-		// Set our MVP matrix, mvp, to the uniform variable
-		//terrainShaders.setMat4("model", model);
-		//terrainShaders.setMat4("view", view);
-		//terrainShaders.setMat4("projection", projection);
+		// Send our MVP matrix, mvp, to the terrain shaders
 		terrain->setMVP(mvp);
 
-		// Set value of model colour and light colour
+		// Send light colour to the terrain shaders
 		terrain->setShaderLightColour(light->getLightColour());
-
-		/////////////////////////////////////////////////////////////////////////////////////
-		// *** Draw *** //
-		// ------------ //
 
 		// Draw terrain
 		terrain->drawTerrain();
@@ -273,20 +254,17 @@ int main()
 		/////////////////////////////////////////////////////////////////////////////////////
 		// *** Draw the Light Cube *** //
 		// --------------------------- //
-		// Switch to light cube shaders, bind other VAO
-		lightShaders.use();
+		
+		// Send the current light colour to the light cube shaders
+		light->setShaderLightColour(light->getLightColour());
 
-		lightShaders.setVec3("lightColour", light->getLightColour());
-
-		model = mat4(1.0f);
+		mvp->resetModel();
 
 		// Move model
-		model = translate(model, light->getLightPosition());
+		mvp->moveModel(light->getLightPosition());
 
 		// Set our MVP matrix to the uniform variables
-		lightShaders.setMat4("model", model);
-		lightShaders.setMat4("view", mvp->getView());
-		lightShaders.setMat4("projection", mvp->getProjection());
+		light->setMVP(mvp);
 
 		// Draw
 		light->drawLight();
@@ -302,8 +280,7 @@ int main()
 		//	  the window it's being rendered to.
 		glfwSwapBuffers(d->getWindow());
 
-		// Constantly query whether any GLFW events have been triggered - such as
-		// the frameBufferSizeCallback() function
+		// Constantly query whether any GLFW events have been triggered
 		glfwPollEvents();
 	}
 

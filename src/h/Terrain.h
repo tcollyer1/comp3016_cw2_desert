@@ -74,7 +74,7 @@ private:
 	ISoundEngine* engine;
 	ISound* sound;
 
-	vec3 soundTree;
+	vec3 soundTreeModel;
 
 	Shader* shaders;
 
