@@ -7,6 +7,11 @@ It simulates a small, procedurally generated desert, complete with lighting and 
 
 In order to launch, either build and run the code directly from .sln file in Visual Studio (2022), or build the code and find **Desert.exe** in the `\x64\Debug` directory (or Release). You can then freely move around the scene using the controls provided below. The project includes audio, so speakers/a headset is recommended.
 
+> [!NOTE]
+> The libraries listed further below must be located in `C:\Users\Public\OpenGL\include` for the headers, and `C:\Users\Public\OpenGL\lib` for library files.
+> 
+> `mesh.h`, `model.h`, `shader.h` and `shader_m.h` from LearnOpenGL must be located in `C:\Users\Public\OpenGL\include\learnopengl` alongside other libraries.
+
 ## Controls
 | Control | Action |
 | ----------- | ----------- |
@@ -34,7 +39,7 @@ The code is structured using an object-oriented approach and is divided up into 
 ## Sources & Libraries
 ### Libraries
 - Assimp (model loading)
-- LearnOpenGL (model & shader loading)
+- LearnOpenGL for model & shader loading header files (see note above)
 - GLAD
 - GLFW3
 - GLM
