@@ -1,7 +1,7 @@
 # OpenGL Desert Scene
 ![](https://github.com/tcollyer1/comp3016_cw2_desert/blob/main/media/preview.png)
 
-In summary, this project is a desert scene created for COMP3016 coursework 2, written primarily using OpenGL, GLAD and C++, in Visual Studio 2022.
+In summary, this project is a desert scene created for COMP3016 coursework 2, written primarily using OpenGL, GLSL and C++, in Visual Studio 2022.
 
 It simulates a small, procedurally generated desert, complete with lighting and audio incorporated into a day/night cycle, and 3 main sub-biomes - sand (main desert), oasis and grassy regions, each with differing properties (types of models etc.). The scene can be freely explored, with two different modes - fly and walk.
 
@@ -45,7 +45,7 @@ The code is structured using an object-oriented approach and is divided up into 
 - GLM
 - irrKlang (audio)
 
-### Models
+### Resources and Models
 - [ZapSplat](https://www.zapsplat.com) (audio)
 - [TurboSquid](https://www.turbosquid.com) and [Sketchfab](https://sketchfab.com) (models)
   - [Palm tree model](https://www.turbosquid.com/3d-models/cordyline-indivisa-free-3d-model-2117614)
