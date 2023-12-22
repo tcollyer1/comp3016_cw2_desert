@@ -43,12 +43,12 @@ TerrainTexture::TerrainTexture(string path, TerrainType type, Shader* terrainSha
 	// Sets to use linear interpolation upscaling (past largest mipmap texture) (default upscaling method)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	data = stbi_load(path.c_str(), &width, &height, &colourChannels, 4); // TODO: Back to 0?
+	data = stbi_load(path.c_str(), &width, &height, &colourChannels, 4);
 
 	if (data) // If retrieval was successful
 	{
 		// Generation of texture from retrieved texture data
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data); // TODO: Switch to GL_RGB?
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		// Automatically generates all required mipmaps on bound texture
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}

@@ -28,7 +28,7 @@ class Light : public ShaderInterface
 public:
 	vec3 lightColour;
 
-	Light(string vertexShader, string fragShader) : ShaderInterface(vertexShader, fragShader)
+	Light(string vertexShader, string fragShader, int* err) : ShaderInterface(vertexShader, fragShader, err)
 	{
 		currSkyColour = day1;
 		lightColour = vec3(1.0f);

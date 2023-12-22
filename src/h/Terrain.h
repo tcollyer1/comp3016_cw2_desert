@@ -49,7 +49,7 @@ class Terrain : public ShaderInterface
 public:
 	enum Biome { GRASS, GRASS_DESERT, DESERT, DESERT_PATH, DESERT_OASIS, OASIS };
 
-	Terrain(string vertexShader, string fragShader) : ShaderInterface(vertexShader, fragShader)
+	Terrain(string vertexShader, string fragShader, int* err) : ShaderInterface(vertexShader, fragShader, err)
 	{
 		rowIndex = 0;
 		colVerticesOffset = drawStartPos;

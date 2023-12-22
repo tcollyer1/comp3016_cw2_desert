@@ -1,8 +1,21 @@
 #include "..\h\ShaderInterface.h"
 
-ShaderInterface::ShaderInterface(string v, string f)
+ShaderInterface::ShaderInterface(string v, string f, int* err)
 {
-	shaders = new Shader(v.c_str(), f.c_str());
+	(*err) = 0;
+
+	fstream vert(v);
+	fstream frag(f);
+
+	if (!vert.good() || !frag.good())
+	{
+		(*err) = 1;
+		shaders = NULL;
+	}
+	else
+	{
+		shaders = new Shader(v.c_str(), f.c_str());
+	}	
 }
 
 ShaderInterface::~ShaderInterface()

@@ -30,7 +30,7 @@ private:
 	vector<vec3> oasisModPos;
 
 public:
-	ModelSet(Terrain* t, string vertexShader, string fragShader) : ShaderInterface(vertexShader, fragShader)
+	ModelSet(Terrain* t, string vertexShader, string fragShader, int* err) : ShaderInterface(vertexShader, fragShader, err)
 	{
 		grass = new Model("media/grass/scene.gltf");
 		tree = new Model("media/palmTree/CordylineFREE.obj");

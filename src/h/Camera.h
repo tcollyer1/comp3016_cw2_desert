@@ -15,6 +15,7 @@ using namespace std;
 using namespace glm;
 using namespace irrklang;
 
+// Keeps track of the camera position, and additionally handles user input/mouse movement
 class Camera
 {
 public:

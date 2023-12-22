@@ -38,19 +38,45 @@ Camera* camera = NULL;
 
 int main()
 {
+	srand(time((time_t*)NULL)); // seed rand() with the time to improve the "true" randomness
+
+	// Create and set up GLFW window
 	Display* d = new Display(mouseCallback, frameBufferSizeCallback);
 
 	if (d->checkErrors())
 	{
-		cout << "\nErrors found: closing program.\n";
+		cout << "Errors found: closing program.\n";
 
 		return -1;
 	}
 
-	// Add terrain, light and models
-	Terrain* terrain = new Terrain(tVertexShader, tFragShader);
-	Light* light = new Light(lVertexShader, lFragShader);
-	ModelSet* models = new ModelSet(terrain, mVertexShader, mFragShader);
+	int shaderError;
+
+	// Add terrain, light and models.
+	// Close the program (-1) if shaders cannot be loaded.
+	Terrain* terrain = new Terrain(tVertexShader, tFragShader, &shaderError);
+
+	if (shaderError)
+	{
+		cout << "ERROR: Shader loading failed\n";
+		return -1;
+	}
+
+	Light* light = new Light(lVertexShader, lFragShader, &shaderError);
+
+	if (shaderError)
+	{
+		cout << "ERROR: Shader loading failed\n";
+		return -1;
+	}
+
+	ModelSet* models = new ModelSet(terrain, mVertexShader, mFragShader, &shaderError);
+
+	if (shaderError)
+	{
+		cout << "ERROR: Shader loading failed\n";
+		return -1;
+	}
 
 	camera = new Camera(terrain);
 
