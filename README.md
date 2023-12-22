@@ -26,7 +26,7 @@ The code is structured using an object-oriented approach and is divided up into 
 - The `Terrain` class handles generating and drawing the terrain.
 - The `Light` class handles generating, drawing and moving the light source around the scene.
 - The `ModelSet` class keeps track of all the models on the scene and handles their drawing.
-- The `Camera` class keeps information on the camera position, as well as handling mouse movement and user input, serving as a class to interface the user with the rest of the scene. It keeps a copy of the `Terrain` object so it can update it of the current user position for 3D audio purposes, and also to be able to get the camera's Y position depending on the terrain height for ground traversal.
+- The `Camera` class keeps information on the camera position, as well as handling mouse movement and user input, serving as a class to interface the user with the rest of the scene. It keeps a copy of the `Terrain` object so it can update it with the current user position for 3D audio purposes, and also to be able to get the camera's Y position depending on the terrain height for ground traversal.
 - The `MVP` class manages the MVP matrix throughout runtime, including handling model transforms or view/projection updates.
 - The `TerrainTexture` class is responsible for generating textures to be used on the terrain, and is used by the `Terrain` class.
 - The `VAO`, `VBO` and `IBO` are all self-contained buffer classes used to manage vertex array objects, vertex buffer objects and index buffer objects. VBOs and IBOs can only be manipulated by a VAO. VAOs are used by other classes, such as `Terrain` and `Light` to store the vertices, indices, colours, texture coordinates of everything in the scene on the GPU.
@@ -44,8 +44,8 @@ The code is structured using an object-oriented approach and is divided up into 
 - [ZapSplat](https://www.zapsplat.com) (audio)
 - [TurboSquid](https://www.turbosquid.com) and [Sketchfab](https://sketchfab.com) (models)
   - [Palm tree model](https://www.turbosquid.com/3d-models/cordyline-indivisa-free-3d-model-2117614)
-  - [Cactus model](https://sketchfab.com/3d-models/cactus-saguaro-d98fcb4869c6413f943fb127d60edb6e)
-  - [Grass model](https://sketchfab.com/3d-models/grass-bushes-game-ready-asset-aa1fa43af9bf4228adfddb54ea123ad1)
+  - [Cactus model](https://sketchfab.com/3d-models/cactus-saguaro-d98fcb4869c6413f943fb127d60edb6e) (licence in `media/cactus`)
+  - [Grass model](https://sketchfab.com/3d-models/grass-bushes-game-ready-asset-aa1fa43af9bf4228adfddb54ea123ad1) (license in `media/grass`)
 
 ## Key Features
 - Object-oriented design approach
