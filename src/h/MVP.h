@@ -17,7 +17,6 @@ class MVP
 {
 private:
 	// Global matrices for transformations
-	mat4 transform;
 	mat4 model;
 	mat4 view;
 	mat4 projection;

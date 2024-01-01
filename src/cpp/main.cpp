@@ -155,7 +155,7 @@ int main()
 		// --------------------------- //
 		
 		// Send the current light colour to the light cube shaders
-		light->setShaderLightColour(light->getLightColour());
+		light->setShaderLightColour();
 
 		mvp->resetModel();
 

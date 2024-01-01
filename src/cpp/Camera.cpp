@@ -172,6 +172,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 	// W - forward
 	if (glfwGetKey(pW, GLFW_KEY_W) == GLFW_PRESS)
 	{
+		// If in walk mode, ensure the y position is altered to only move with the terrain height
 		if (mode == WALK)
 		{
 			keyPress = true;
@@ -283,7 +284,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 			switch (biome)
 			{
 			case Terrain::DESERT:
-				if (sound2 != NULL)
+				if (sound2 != NULL) // Stop any other sound effects playing
 				{
 					sound2->stop();
 					sound2->drop();
@@ -295,7 +296,7 @@ void Camera::processUserInput(GLFWwindow* pW, float deltaTime)
 					sound3->drop();
 					sound3 = NULL;
 				}
-				sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true);
+				sound = engine->play2D(sandSound.c_str(), true, false, true, ESM_AUTO_DETECT, true); // Play new sound effect
 				break;
 			case Terrain::GRASS:
 				if (sound != NULL)

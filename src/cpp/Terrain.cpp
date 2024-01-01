@@ -50,7 +50,7 @@ void Terrain::setSoundTree()
 		i++;
 	}
 
-	if (engine)
+	if (engine && soundTreeModel.x != 0.0f && soundTreeModel.y != 0.0f && soundTreeModel.z != 0.0f)
 	{
 		sound = engine->play3D(treeSound.c_str(), vec3df(soundTreeModel.x, soundTreeModel.y, soundTreeModel.z), true, false, true);
 		sound->setMinDistance(2.0f);
@@ -357,7 +357,7 @@ void Terrain::generateLandscape()
 			// winding pathways
 			pathVal = abs(pathNoise.GetNoise((float)x, (float)y));
 
-			modelsVal = modelNoise.GetNoise((float)x, (float)y);
+			modelsVal = modelNoise.GetNoise((float)x, (float)y); // Generate noise for model placement
 
 			// Set random height value (random noise) calculated before,
 			// to the vertex y value. 

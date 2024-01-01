@@ -56,6 +56,7 @@ public:
 	~Light();
 
 	void moveLight(double currTime);
+	void setShaderLightColour();
 	vec3 getLightPosition();
 
 	vec3 getSkyColour();

@@ -36,7 +36,7 @@ vec4 totalColour = sandTexColour + grassTexColour + waterTexColour + grass2TexCo
 
 void main()
 {
-vec3 norm = normalize(Normal);
+	vec3 norm = normalize(Normal);
 	vec3 lightDir = normalize(lightPos - FragPos);
 
 	// AMBIENT

@@ -185,7 +185,7 @@ void Light::moveLight(double currTime)
 	{
 		// This section performs calculations for the sky colour, light colour and sound volumes
 		// for when the light is not exactly at the midday/sunset/midnight/sunrise positions
-		// for a gradual effect
+		// for a gradual effect. Repeated for each of the four core times of day
 
 		float lastSoundVal = 0.0f;
 		float lastSound2Val = 0.0f;
@@ -314,7 +314,7 @@ void Light::moveLight(double currTime)
 		}
 
 
-		// Calculate all final values
+		// Calculate all final values. This repeated calculation scales values between the minimum and maximum point to get a transitional value
 		newColour.r = (currentDist - rmin) / (rmax - rmin) * (tmaxX - tminX) + tminX;
 		newColour.g = (currentDist - rmin) / (rmax - rmin) * (tmaxY - tminY) + tminY;
 		newColour.b = (currentDist - rmin) / (rmax - rmin) * (tmaxZ - tminZ) + tminZ;
@@ -342,4 +342,11 @@ void Light::moveLight(double currTime)
 			sound2->setVolume(newVolume2);
 		}		
 	}
+}
+
+// Sends the current light colour to the shader.
+void Light::setShaderLightColour()
+{
+	shaders->use();
+	shaders->setVec3("lightColour", lightColour);
 }

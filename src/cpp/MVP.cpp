@@ -6,7 +6,6 @@ MVP::MVP()
 	model = mat4(1.0f);
 	view = mat4(1.0f);
 	projection = mat4(1.0f);
-	transform = mat4(1.0f);
 }
 
 // Sets the model matrix back to a "default" state for new positioning
