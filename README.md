@@ -9,6 +9,8 @@ In order to launch, either build and run the code directly from .sln file in Vis
 
 > [!NOTE]
 > The libraries listed further below must be located in `C:\Users\Public\OpenGL\include` for the headers, and `C:\Users\Public\OpenGL\lib` for library files.
+>
+> `stb_image.h` must also be included in the `C:\Users\Public\OpenGL\include` directory, as the LearnOpenGL headers below are reliant on it.
 > 
 > `mesh.h`, `model.h`, `shader.h` and `shader_m.h` from LearnOpenGL must be located in `C:\Users\Public\OpenGL\include\learnopengl` alongside other libraries.
 
@@ -47,6 +49,10 @@ The code is structured using an object-oriented approach and is divided up into 
 
 ### Resources and Models
 - [ZapSplat](https://www.zapsplat.com) (audio)
+- Textures:
+  - [manytextures.com](https://www.manytextures.com/texture/1/green-grass/) (grass)
+  - [textures.com](https://www.textures.com/category/soil/43024) (sand)
+  - [Pinterest](https://www.pinterest.co.uk/pin/119415827594571383/) (water)
 - [TurboSquid](https://www.turbosquid.com) and [Sketchfab](https://sketchfab.com) (models)
   - [Palm tree model](https://www.turbosquid.com/3d-models/cordyline-indivisa-free-3d-model-2117614)
   - [Cactus model](https://sketchfab.com/3d-models/cactus-saguaro-d98fcb4869c6413f943fb127d60edb6e) (licence in `media/cactus`)
