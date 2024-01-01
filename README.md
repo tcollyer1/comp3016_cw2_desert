@@ -1,7 +1,7 @@
 # OpenGL Desert Scene
 ![](https://github.com/tcollyer1/comp3016_cw2_desert/blob/main/media/preview.png)
 
-In summary, this project is a desert scene created for COMP3016 coursework 2, written primarily using OpenGL, GLSL and C++, in Visual Studio 2022.
+This project is a desert scene created for COMP3016 coursework 2, written primarily using OpenGL, GLSL and C++, in Visual Studio 2022.
 
 It simulates a small, procedurally generated desert, complete with lighting and audio incorporated into a day/night cycle, and 3 main sub-biomes - sand (main desert), oasis and grassy regions, each with differing properties (types of models etc.). The scene can be freely explored, with two different modes - fly and walk.
 
@@ -14,6 +14,8 @@ In order to launch, either build and run the code directly from .sln file in Vis
 > 
 > `mesh.h`, `model.h`, `shader.h` and `shader_m.h` from LearnOpenGL must be located in `C:\Users\Public\OpenGL\include\learnopengl` alongside other libraries.
 
+![](https://github.com/tcollyer1/comp3016_cw2_desert/blob/main/media/preview.gif)
+
 ## Controls
 | Control | Action |
 | ----------- | ----------- |
@@ -25,7 +27,11 @@ In order to launch, either build and run the code directly from .sln file in Vis
 | `Shift` | Sprint (both fly/walk mode) |
 
 ## Overview & Code Structure
-Many procedural terrain generation-style projects have been attempted using OpenGL - some of which are also deserts. However, the vast majority of the time the desert features nothing more than sandy dunes, or focuses only on a desert oasis. The goal with this project was to incorporate different elements of a desert, including not just sandy dunes but also grassy areas and multiple desert oasis. In addition, I wanted to experiment with both lighting and audio to learn how to create a slightly more immersive experience, so the base idea of having a day/night cycle was put in place to allow exploration in this area. It allowed me to learn a variety of new concepts - including normal mapping, the different stages of lighting (ambient, diffuse and specular), how to time animations within the render loop, how to use both 2D and 3D sound and more.
+Many procedural terrain generation-style projects have been attempted using OpenGL - some of which are also deserts. However, the vast majority of the time the desert, much like a real area of desert, features nothing more than sandy dunes, or focuses only on a desert oasis. The goal with this project however was to incorporate different elements of different regions of a desert, starting with the basics of using Perlin noise to generate different heightmaps for an otherwise basic, flat, square piece of terrain - and then include not just classic sandy dunes, but also some variation, such as grassy areas and multiple desert oasis, with low troughs representing oasis surrounded by trees and higher areas being grassy and full of cacti and grass. I wanted to add additional interest to the plain desert areas too - and upon investigating into the effects of taking the absolute value of a Perlin noise map (turbulence), which creates an interesting path-like effect, I thought I could mix in a different sand texture to represent winding desert paths; visible in the darker, winding paths in the screenshot taken in fly mode below.
+
+![](https://github.com/tcollyer1/comp3016_cw2_desert/blob/main/media/birdseyeview.png)
+
+In addition, I wanted to experiment with both lighting and audio to learn how to create a slightly more immersive experience, so the base idea of having a day/night cycle was put in place to allow exploration in this area. It allowed me to learn a variety of new concepts - including normal mapping, the different stages of lighting (ambient, diffuse and specular), how to time animations within the render loop, how to use both 2D and 3D sound and more.
 
 The code is structured using an object-oriented approach and is divided up into multiple classes.
 - The `Display` class handles GLFW window creation and manipulation.
