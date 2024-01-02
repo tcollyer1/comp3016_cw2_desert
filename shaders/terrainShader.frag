@@ -29,10 +29,10 @@ vec4 textureMap = vec4(colourFrag);
 vec4 sandTexColour = texture(texture0, tiledTex) * textureMap.r;
 vec4 grassTexColour = texture(texture1, tiledTex) * textureMap.g;
 vec4 waterTexColour = texture(texture2, tiledTex) * textureMap.b;
-vec4 grass2TexColour = texture(texture3, tiledTex) * textureMap.a;
+vec4 sand2TexColour = texture(texture3, tiledTex) * textureMap.a;
 
 // Get the total colour for this fragment
-vec4 totalColour = sandTexColour + grassTexColour + waterTexColour + grass2TexColour;
+vec4 totalColour = sandTexColour + grassTexColour + waterTexColour + sand2TexColour;
 
 void main()
 {
