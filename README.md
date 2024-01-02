@@ -1,8 +1,8 @@
 # OpenGL Desert Scene
 ![](https://github.com/tcollyer1/comp3016_cw2_desert/blob/main/media/preview.png)
 
-[Video walkthrough](https://www.youtube.com/watch?v=HrUNBWNnmec)
-[Repo](https://github.com/tcollyer1/comp3016_cw2_desert)
+- [Video walkthrough](https://www.youtube.com/watch?v=HrUNBWNnmec)
+- [Repo](https://github.com/tcollyer1/comp3016_cw2_desert)
 
 This project is a desert scene created for COMP3016 coursework 2, written primarily using OpenGL, GLSL and C++, in Visual Studio 2022.
 
